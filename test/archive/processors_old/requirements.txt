@@ -1,0 +1,8 @@
+docling
+docling-core
+docling-ibm-models
+PyMuPDF
+filetype
+ffmpeg-python
+concurrent.futures; python_version < "3.2" 
+pypdfium2

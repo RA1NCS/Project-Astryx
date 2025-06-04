@@ -1,0 +1,12 @@
+flask
+flask-cors
+azure-storage-blob
+python-dotenv
+filetype
+docling
+docling-core
+docling-ibm-models
+PyMuPDF
+ffmpeg-python
+concurrent.futures; python_version &lt; "3.2"
+pypdfium2

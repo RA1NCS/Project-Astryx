@@ -1,0 +1,20 @@
+# Python 3.10
+azure-functions==1.23.0
+azure-storage-blob==12.25.1
+azure-storage-queue==12.12.0
+python-dotenv==1.1.0
+
+# Document processing dependencies
+docling==2.34.0
+docling-core==2.32.0
+docling-ibm-models==3.4.3
+PyMuPDF==1.26.0
+pypdfium2==4.30.0
+
+# Supporting libraries
+numpy==2.2.6
+Pillow==10.4.0
+lxml==5.4.0
+beautifulsoup4==4.13.4
+requests==2.32.3
+urllib3==1.26.20

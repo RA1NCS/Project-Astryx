@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Azure Functions artifacts
+bin
+obj
+appsettings.json
+local.settings.json
+
+# Azurite artifacts
+__blobstorage__
+__queuestorage__
+__azurite_db*__.json
+
+# Development files
+.git
+.gitignore
+.vscode/
+.DS_Store
+.ignore
+
+# Testing
+test/
+*.test
+*.spec
+
+# Logs
+*.log
+
+# Documentation
+README.md
+*.md
+
+# Other
+.python_packages 

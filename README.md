@@ -1,1 +1,1 @@
-# project-astryx
+# Project Astryx
