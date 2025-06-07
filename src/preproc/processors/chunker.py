@@ -542,38 +542,47 @@ def save_chunks(chunks: List[Chunk], output_path: str):
 
 
 def extract_text_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
-    """Extract only text content and return as JSON data."""
-    text_chunks_data = []
-
+    unique_image_names = set()
     for chunk in chunks:
-        # Create text-specific metadata (exclude images)
-        text_metadata = chunk.metadata.copy() if chunk.metadata else {}
-        text_metadata.pop("images", None)
-        text_metadata.pop("image_count", None)
-        text_metadata["modality"] = ["text"]
+        chunk_metadata = chunk.metadata or {}
+        images = chunk_metadata.get("images", [])
+        for image in images:
+            image_id = image.get("image_id", "")
+            if image_id:
+                unique_image_names.add(image_id)
+
+    text_chunks_data = []
+    for chunk in chunks:
+        chunk_metadata = chunk.metadata or {}
 
         text_chunk_data = {
             "chunk_id": chunk.chunk_id,
+            "image_id_map": list(
+                unique_image_names
+            ), 
             "text": chunk.content,
-            "metadata": {
-                "source_type": text_metadata.get("source_type", ""),
-                "file_name": text_metadata.get("file_name", ""),
-                "source_page": chunk.source_page,
-                "char_start": chunk.char_start,
-                "char_end": chunk.char_end,
-                "char_length": len(chunk.content),
-                "document_complex": text_metadata.get("document_complex", False),
-                "modality": ["text"],
-                "has_tables": text_metadata.get("has_tables", False),
-            },
+            "page_number": chunk.source_page,
+            "source_type": chunk_metadata.get("source_type", ""),
+            "file_name": chunk_metadata.get("file_name", ""),
+            "source_page": chunk.source_page,
+            "char_start": chunk.char_start,
+            "char_end": chunk.char_end,
+            "char_length": len(chunk.content),
+            "document_complex": chunk_metadata.get("document_complex", False),
+            "modality": ["text"],
+            "has_tables": chunk_metadata.get("has_tables", False),
+            "format": "text/plain",
         }
         text_chunks_data.append(text_chunk_data)
 
-    return {"total_chunks": len(text_chunks_data), "chunks": text_chunks_data}
+    return {
+        "total_chunks": len(text_chunks_data),
+        "chunks": text_chunks_data,
+    }
 
 
 def extract_image_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
-    """Extract only image data and return as JSON data."""
+    image_counter = 1
     image_chunks_data = []
 
     for chunk in chunks:
@@ -583,26 +592,30 @@ def extract_image_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
         # Only process chunks that have images
         if images:
             for image in images:
+                distinct_image_id = f"image_{image_counter}"
+                image_counter += 1
+
                 image_chunk_data = {
                     "chunk_id": chunk.chunk_id,
-                    "image_id": image.get("image_id", ""),
+                    "image_id": distinct_image_id,
                     "page_number": image.get("page_number", chunk.source_page),
-                    "image_data_base64": image.get("base64", ""),
+                    "source_type": chunk_metadata.get("source_type", ""),
+                    "file_name": chunk_metadata.get("file_name", ""),
+                    "source_page": image.get("page_number", chunk.source_page),
+                    "char_start": chunk.char_start,
+                    "char_end": chunk.char_end,
+                    "char_length": len(chunk.content),
+                    "document_complex": chunk_metadata.get("document_complex", False),
+                    "modality": ["images"],
+                    "has_tables": chunk_metadata.get("has_tables", False),
+                    "image_data_base64": image.get(
+                        "base64", ""
+                    ),
                     "format": image.get("format", "PNG"),
-                    "metadata": {
-                        "source_type": chunk_metadata.get("source_type", ""),
-                        "file_name": chunk_metadata.get("file_name", ""),
-                        "source_page": image.get("page_number", chunk.source_page),
-                        "char_start": chunk.char_start,
-                        "char_end": chunk.char_end,
-                        "char_length": len(chunk.content),
-                        "document_complex": chunk_metadata.get(
-                            "document_complex", False
-                        ),
-                        "modality": ["images"],
-                        "has_tables": chunk_metadata.get("has_tables", False),
-                    },
                 }
                 image_chunks_data.append(image_chunk_data)
 
-    return {"total_images": len(image_chunks_data), "images": image_chunks_data}
+    return {
+        "total_images": len(image_chunks_data),
+        "images": image_chunks_data,
+    }
