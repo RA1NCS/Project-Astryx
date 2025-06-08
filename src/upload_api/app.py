@@ -1,19 +1,30 @@
 import os
 import sys
 from pathlib import Path
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 from utils.blob_storage import BlobStorageManager
 from utils.file_utils import compute_file_hash, get_mime_type, generate_blob_path
 
+import uvicorn
+
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
 
-# Initialize blob storage manager
+# Configure CORS to allow file uploads from any origin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Ensure Azure connection string is available before initializing services
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 if not connection_string:
     raise ValueError("AZURE_STORAGE_CONNECTION_STRING environment variable is required")
@@ -21,22 +32,14 @@ if not connection_string:
 blob_manager = BlobStorageManager(connection_string)
 
 
-@app.route("/upload", methods=["POST"])
-def upload_file():
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-
-    # if "username" not in request.form:
-    #     return jsonify({"error": "Username parameter is required"}), 400
-
-    file = request.files["file"]
-    username = request.form.get("username", "dev")
-
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+# Handle file upload with deduplication based on SHA256 hash
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...), username: str = Form("dev")):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file selected")
 
     try:
-        file_data = file.read()
+        file_data = await file.read()
 
         file_hash = compute_file_hash(file_data)
         mime_type = get_mime_type(file_data)
@@ -57,46 +60,45 @@ def upload_file():
                 blob_name=blob_path, file_data=file_data, metadata=metadata, tags=tags
             )
 
-            return (
-                jsonify(
-                    {
-                        "status": "success",
-                        "blob_url": blob_url,
-                        "sha4": file_hash[-4:],
-                        "sha256": file_hash,
-                        "mime_type": mime_type,
-                        "blob_path": blob_path,
-                    }
-                ),
-                202,
+            return JSONResponse(
+                content={
+                    "status": "success",
+                    "blob_url": blob_url,
+                    "sha4": file_hash[-4:],
+                    "sha256": file_hash,
+                    "mime_type": mime_type,
+                    "blob_path": blob_path,
+                },
+                status_code=202,
             )
 
         except Exception as e:
             # Check if this is a duplicate file error
             if "BlobAlreadyExists" in str(e):
                 existing_blob_url = blob_manager.get_blob_url("raw", blob_path)
-                return (
-                    jsonify(
-                        {
-                            "status": "duplicate",
-                            "message": "Duplicate file",
-                            "blob_url": existing_blob_url,
-                            "sha4": file_hash[-4:],
-                        }
-                    ),
-                    409,
+                return JSONResponse(
+                    content={
+                        "status": "duplicate",
+                        "message": "Duplicate file",
+                        "blob_url": existing_blob_url,
+                        "sha4": file_hash[-4:],
+                    },
+                    status_code=409,
                 )
             else:
+                # Re-raise unexpected exceptions for proper error handling
                 raise e
 
     except Exception as e:
-        return jsonify({"error": f"Upload failed: {str(e)}"}), 500
+        # Convert any unhandled exceptions to HTTP responses
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
-@app.route("/health", methods=["GET"])
-def health_check():
-    return jsonify({"status": "healthy"}), 200
+# Provide basic health check endpoint for service monitoring
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,5 +1,6 @@
-flask
-flask-cors
+fastapi
+uvicorn[standard]
+python-multipart
 azure-storage-blob
 python-dotenv
 filetype
@@ -8,5 +9,5 @@ docling-core
 docling-ibm-models
 PyMuPDF
 ffmpeg-python
-concurrent.futures; python_version &lt; "3.2"
+concurrent.futures; python_version < "3.2"
 pypdfium2
