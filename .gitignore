@@ -1,10 +1,10 @@
 .cursor
 test/datasets/*
-test/benchmarks/**/*.pdf
-test/benchmarks/**/*.docx
-test/benchmarks/**/out_dir/
-test/benchmarks/**/output/
-test/benchmarks/**/markdown_output/
+test/**/*.pdf
+test/**/*.docx
+test/**/out_dir/
+test/**/output/
+test/**/markdown_output/
 .venv
 chats
 .DS_Store
@@ -12,3 +12,4 @@ chats
 *.zip
 *.pyc
 output/
+.env

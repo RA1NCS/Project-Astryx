@@ -542,24 +542,20 @@ def save_chunks(chunks: List[Chunk], output_path: str):
 
 
 def extract_text_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
-    unique_image_names = set()
-    for chunk in chunks:
-        chunk_metadata = chunk.metadata or {}
-        images = chunk_metadata.get("images", [])
-        for image in images:
-            image_id = image.get("image_id", "")
-            if image_id:
-                unique_image_names.add(image_id)
-
     text_chunks_data = []
     for chunk in chunks:
         chunk_metadata = chunk.metadata or {}
 
+        chunk_images = chunk_metadata.get("images", [])
+        chunk_image_ids = []
+        for image in chunk_images:
+            image_id = image.get("image_id", "")
+            if image_id:
+                chunk_image_ids.append(image_id)
+
         text_chunk_data = {
             "chunk_id": chunk.chunk_id,
-            "image_id_map": list(
-                unique_image_names
-            ), 
+            "image_context": chunk_image_ids,  # Only this chunk's images
             "text": chunk.content,
             "page_number": chunk.source_page,
             "source_type": chunk_metadata.get("source_type", ""),
@@ -608,9 +604,7 @@ def extract_image_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
                     "document_complex": chunk_metadata.get("document_complex", False),
                     "modality": ["images"],
                     "has_tables": chunk_metadata.get("has_tables", False),
-                    "image_data_base64": image.get(
-                        "base64", ""
-                    ),
+                    "image_data_base64": image.get("base64", ""),
                     "format": image.get("format", "PNG"),
                 }
                 image_chunks_data.append(image_chunk_data)

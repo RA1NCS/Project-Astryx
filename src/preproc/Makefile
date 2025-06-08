@@ -7,6 +7,6 @@ build:
 
 # Deploy to Azure Container Registry
 deploy:
-	docker push astryxcontainers.azurecr.io/worker:latest && az containerapp update --name astryx-ingestion --resource-group learning --image astryxcontainers.azurecr.io/worker:latest
+	az acr login --name astryxcontainers && docker push astryxcontainers.azurecr.io/worker:latest && az containerapp update --name astryx-ingestion --resource-group learning --image astryxcontainers.azurecr.io/worker:latest
 
 .PHONY: make build deploy

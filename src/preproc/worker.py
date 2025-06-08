@@ -73,6 +73,8 @@ def process_file_content(file_data: bytes, file_name: str):
         if not unchunked_result:
             raise Exception("Document processing failed")
 
+        unchunked_result["metadata"]["file_name"] = file_name
+
         # Create chunks using DocumentChunker
         chunker = DocumentChunker(chunk_size=CHUNK_SIZE, overlap=OVERLAP)
         chunked_result = chunker.chunk_docling_result(unchunked_result)
