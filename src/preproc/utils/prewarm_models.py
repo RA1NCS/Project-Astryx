@@ -22,7 +22,7 @@ def prewarm_docling_models():
     """Download and cache Docling models during Docker build."""
 
     # Import the converter creation functions
-    from processors.processor import (
+    from doc_processing.processor import (
         _create_simple_docling_converter,
         _create_docling_converter,
     )
@@ -33,28 +33,27 @@ def prewarm_docling_models():
     prewarmer_path = os.path.join(os.path.dirname(__file__), "prewarmer.pdf")
 
     if not os.path.exists(prewarmer_path):
-        logger.error(f"Prewarmer PDF not found at {prewarmer_path}")
+        logger.error("Prewarmer PDF not found at %s", prewarmer_path)
         sys.exit(1)
 
-    logger.info(f"Using prewarmer PDF: {prewarmer_path}")
+    logger.info("Using prewarmer PDF: %s", prewarmer_path)
 
     try:
         # Create and warm simple converter
         logger.info("Creating simple converter and downloading models...")
         simple_converter = _create_simple_docling_converter()
-        simple_result = simple_converter.convert(prewarmer_path)
+        simple_converter.convert(prewarmer_path)
         logger.info("Simple converter models downloaded and cached")
 
         # Create and warm complex converter
         logger.info("Creating complex converter and downloading models...")
         complex_converter = _create_docling_converter(complex_mode=True)
-        complex_result = complex_converter.convert(prewarmer_path)
+        complex_converter.convert(prewarmer_path)
         logger.info("Complex converter models downloaded and cached")
 
         logger.info("Build-time model prewarming completed successfully!")
-
-    except Exception as e:
-        logger.error(f"Failed to prewarm models during build: {e}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error("Failed to prewarm models during build: %s", e)
         sys.exit(1)
 
 

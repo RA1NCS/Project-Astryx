@@ -610,6 +610,7 @@ def process_document(file_path: str, simple_converter=None, complex_converter=No
                 "type": "document",
                 "content": {
                     "markdown": merged_markdown,
+                    "page_markdown": final_page_markdown,
                     "images": all_images,
                     "tables": tables,
                     "metadata": metadata,

@@ -19,10 +19,10 @@ class DocumentChunker:
         self.chunk_size = chunk_size
         self.overlap = overlap
 
+    # Analyze document content to determine complexity level and modality
     def _analyze_document_complexity(
         self, content: Dict[str, Any]
     ) -> tuple[bool, List[str]]:
-        """Analyze document content to determine complexity level and modality."""
         images = content.get("images", [])
         tables = content.get("tables", [])
         markdown_text = content.get("markdown", "")
@@ -31,18 +31,16 @@ class DocumentChunker:
         has_tables = len(tables) > 0
         has_markdown_tables = self._has_markdown_tables(markdown_text)
 
-        # Determine complexity (boolean)
         is_complex = has_images or has_tables or has_markdown_tables
 
-        # Determine modality
         modality = ["text"]
         if has_images:
             modality.append("images")
 
         return is_complex, modality
 
+    # Check if text contains markdown tables by counting table indicators
     def _has_markdown_tables(self, text: str) -> bool:
-        """Check if text contains markdown tables."""
         if not text:
             return False
 
@@ -58,8 +56,8 @@ class DocumentChunker:
 
         return table_indicators >= 2
 
+    # Determine MIME type from file extension
     def _determine_file_type(self, file_name: str) -> str:
-        """Determine file type/mime type from file extension."""
         if not file_name or file_name == "unknown":
             return "application/octet-stream"
 
@@ -87,6 +85,7 @@ class DocumentChunker:
 
         return mime_mapping.get(ext, "application/octet-stream")
 
+    # Create standardized chunk metadata with consistent structure
     def _create_chunk_metadata(
         self,
         file_type: str,
@@ -96,7 +95,6 @@ class DocumentChunker:
         modality: List[str] = None,
         **kwargs,
     ) -> Dict[str, Any]:
-        """Factory function for creating consistent chunk metadata."""
         images = images or []
         modality = modality or ["text"]
         has_chunk_tables = kwargs.get("has_tables", False)
@@ -117,7 +115,7 @@ class DocumentChunker:
             "modality": chunk_modality,
         }
 
-        # Add other kwargs but exclude total_chunks and chunking_time
+        # Filter out timing and count fields from kwargs
         filtered_kwargs = {
             k: v
             for k, v in kwargs.items()
@@ -126,6 +124,7 @@ class DocumentChunker:
         metadata.update(filtered_kwargs)
         return metadata
 
+    # Create chunk object with consistent structure and metadata
     def _create_chunk(
         self,
         content: str,
@@ -135,7 +134,6 @@ class DocumentChunker:
         char_end: int = 0,
         metadata_params: Dict = None,
     ) -> Chunk:
-        """Unified chunk creation with metadata factory."""
         return Chunk(
             content=content.strip(),
             chunk_id=chunk_id,
@@ -145,14 +143,13 @@ class DocumentChunker:
             metadata=metadata_params or {},
         )
 
+    # Process docling result into semantic chunks with intelligent image association
     def chunk_docling_result(self, docling_result: Dict[str, Any]) -> List[Chunk]:
-        """Process docling result into semantic chunks with image association."""
 
         def _chunk_processor():
             chunks = []
             content = docling_result.get("content", {})
 
-            # Extract file information
             file_name = docling_result.get("metadata", {}).get("file_name", "unknown")
             file_type = self._determine_file_type(file_name)
 
@@ -161,7 +158,7 @@ class DocumentChunker:
                 images = content.get("images", [])
                 document_complex, modality = self._analyze_document_complexity(content)
 
-                # Create lookup for fast image matching
+                # Create lookup dictionary for efficient image matching
                 image_lookup = {
                     img.get("image_id", f"img_{i}"): img for i, img in enumerate(images)
                 }
@@ -195,9 +192,10 @@ class DocumentChunker:
                                     metadata,
                                 )
                                 chunks.append(chunk)
-                                current_pos += len(header_chunk) + 1  # +1 for separator
+                                # Account for separator in position tracking
+                                current_pos += len(header_chunk) + 1
                             else:
-                                # Split oversized header sections
+                                # Handle oversized header sections by further splitting
                                 sub_chunks = self._split_text_into_chunks(
                                     header_chunk,
                                     1,
@@ -222,7 +220,7 @@ class DocumentChunker:
                         )
                         chunks.extend(markdown_chunks)
 
-                # Create separate chunks for images with OCR content
+                # Create dedicated chunks for images with OCR text or captions
                 for i, image in enumerate(images):
                     image_content_parts = []
 
@@ -245,10 +243,8 @@ class DocumentChunker:
                             has_ocr_text=bool(image.get("ocr_text")),
                             primary_image=True,
                         )
-                        # Use length of markdown text as starting position for image chunks
-                        image_start_pos = (
-                            len(markdown_text) + i * 100
-                        )  # Approximate offset
+                        # Position image chunks after main text content
+                        image_start_pos = len(markdown_text) + i * 100
                         chunk = self._create_chunk(
                             image_content,
                             f"chunk_img_0_1_{i}",
@@ -260,7 +256,7 @@ class DocumentChunker:
                         chunks.append(chunk)
 
             else:
-                # Fallback to legacy structure
+                # Handle legacy page-based structure when markdown not available
                 pages = content.get("pages", [])
                 for page_data in pages:
                     page_num = page_data.get("page", 1)
@@ -284,28 +280,27 @@ class DocumentChunker:
         chunks = _chunk_processor()
         return chunks
 
+    # Associate images with text chunks using placeholders and semantic matching
     def _extract_images_for_chunk(
         self, text_chunk: str, image_lookup: Dict[str, Dict]
     ) -> List[Dict]:
-        """Associate images with text chunks based on placeholders and content matching."""
         chunk_images = []
 
-        # Count image placeholders in this chunk
         image_markers = re.findall(r"<!-- image -->", text_chunk)
 
         if len(image_markers) > 0:
-            # Assign images based on placeholder count
+            # Use placeholder count to determine image assignment
             available_images = list(image_lookup.values())
             images_to_include = available_images[: len(image_markers)]
             chunk_images.extend(images_to_include)
         else:
-            # Match based on caption/OCR text similarity
+            # Fall back to content similarity matching
             for image_data in image_lookup.values():
                 caption = image_data.get("caption", "").strip()
                 ocr_text = image_data.get("ocr_text", "").strip()
 
                 if caption and len(caption) > 10:
-                    # Check caption word overlap with chunk
+                    # Match caption words with chunk text
                     caption_words = [w for w in caption.lower().split() if len(w) > 3]
                     chunk_lower = text_chunk.lower()
 
@@ -313,12 +308,13 @@ class DocumentChunker:
                         matching_words = sum(
                             1 for word in caption_words if word in chunk_lower
                         )
+                        # Require 70% word overlap for caption matching
                         if matching_words >= len(caption_words) * 0.7:
                             chunk_images.append(image_data)
                             break
 
                 elif ocr_text and len(ocr_text) > 20:
-                    # Check OCR text overlap with chunk
+                    # Match OCR text with chunk content
                     ocr_words = [w for w in ocr_text.lower().split() if len(w) > 4]
                     chunk_lower = text_chunk.lower()
 
@@ -326,14 +322,15 @@ class DocumentChunker:
                         matching_words = sum(
                             1 for word in ocr_words if word in chunk_lower
                         )
+                        # Require 80% word overlap for OCR matching
                         if matching_words >= len(ocr_words) * 0.8:
                             chunk_images.append(image_data)
                             break
 
         return chunk_images
 
+    # Split text into logical sections based on markdown headers and document patterns
     def _split_by_headers(self, text: str) -> List[str]:
-        """Split text by markdown headers and document structure patterns."""
         lines = text.split("\n")
         sections = []
         current_section = []
@@ -341,22 +338,18 @@ class DocumentChunker:
         for line in lines:
             line_stripped = line.strip()
 
-            # Detect various header patterns
-            is_header = (
-                # Standard markdown headers
-                re.match(r"^#{1,6}\s+.+", line_stripped)
-                or (
-                    len(line_stripped) > 0
-                    and len(line_stripped) < 100
-                    and not line_stripped.endswith(".")
-                    and not line_stripped.endswith(",")
-                    and not line_stripped.startswith("-")
-                    and not line_stripped.startswith("*")
-                    and (
-                        line_stripped.isupper()
-                        or re.match(r"^[A-Z][^.]*[:\(]", line_stripped)
-                        or re.match(r"^## .+", line_stripped)
-                    )
+            # Detect various header patterns including markdown and structural headers
+            is_header = re.match(r"^#{1,6}\s+.+", line_stripped) or (
+                len(line_stripped) > 0
+                and len(line_stripped) < 100
+                and not line_stripped.endswith(".")
+                and not line_stripped.endswith(",")
+                and not line_stripped.startswith("-")
+                and not line_stripped.startswith("*")
+                and (
+                    line_stripped.isupper()
+                    or re.match(r"^[A-Z][^.]*[:\(]", line_stripped)
+                    or re.match(r"^## .+", line_stripped)
                 )
             )
 
@@ -370,7 +363,7 @@ class DocumentChunker:
         if current_section:
             sections.append("\n".join(current_section))
 
-        # Filter out short or comment sections
+        # Filter out very short sections and HTML comments
         filtered_sections = []
         for section in sections:
             section_clean = section.strip()
@@ -379,6 +372,7 @@ class DocumentChunker:
 
         return filtered_sections
 
+    # Split text into overlapping chunks respecting sentence boundaries
     def _split_text_into_chunks(
         self,
         text: str,
@@ -390,7 +384,6 @@ class DocumentChunker:
         modality: List[str] = None,
         file_name: str = "unknown",
     ) -> List[Chunk]:
-        """Split text into chunks with overlap and sentence boundaries."""
         chunks = []
         text = text.strip()
         if not text:
@@ -398,7 +391,6 @@ class DocumentChunker:
 
         modality = modality or ["text"]
 
-        # Split by sentences for coherent chunks
         sentences = self._split_into_sentences(text)
 
         current_chunk = ""
@@ -406,7 +398,7 @@ class DocumentChunker:
         chunk_count = 0
 
         for sentence in sentences:
-            # Check if adding sentence exceeds chunk size
+            # Check if adding sentence would exceed chunk size limit
             if len(current_chunk) + len(sentence) > self.chunk_size and current_chunk:
                 chunk_id = (
                     f"chunk_{chunk_prefix}_{page_num}_{chunk_count}"
@@ -440,7 +432,7 @@ class DocumentChunker:
                 )
                 chunks.append(chunk)
 
-                # Start new chunk with overlap (inline _get_overlap_text logic)
+                # Create overlap text for next chunk to maintain context
                 overlap_text = ""
                 if len(current_chunk) > self.overlap:
                     overlap_candidate = current_chunk[-self.overlap :]
@@ -464,7 +456,7 @@ class DocumentChunker:
             else:
                 current_chunk += " " + sentence if current_chunk else sentence
 
-        # Handle final chunk
+        # Process remaining text as final chunk
         if current_chunk.strip():
             chunk_id = (
                 f"chunk_{chunk_prefix}_{page_num}_{chunk_count}"
@@ -500,116 +492,200 @@ class DocumentChunker:
 
         return chunks
 
+    # Split text into sentences using multiple strategies for robustness
     def _split_into_sentences(self, text: str) -> List[str]:
-        """Split text into sentences with fallback strategies."""
         sentence_endings = r"[.!?]+(?:\s|$)"
         sentences = re.split(sentence_endings, text)
         sentences = [s.strip() for s in sentences if s.strip()]
 
-        # Fallback to line splitting
+        # Fall back to line-based splitting if sentence detection fails
         if len(sentences) <= 1:
             sentences = [line.strip() for line in text.split("\n") if line.strip()]
 
-        # Fallback to period splitting
+        # Final fallback to period-based splitting
         if len(sentences) <= 1:
             sentences = [s.strip() + "." for s in text.split(".") if s.strip()]
 
         return sentences
 
+    # Process docling result preserving page boundaries for text chunks
+    def chunk_docling_result_with_pages(
+        self, docling_result: Dict[str, Any], page_markdown: Dict[int, str] = None
+    ) -> List[Chunk]:
+        chunks = []
+        content = docling_result.get("content", {})
 
-def save_chunks(chunks: List[Chunk], output_path: str):
-    """Save chunks to JSON file."""
-    chunks_data = []
-    for chunk in chunks:
-        chunk_data = {
-            "chunk_id": chunk.chunk_id,
-            "content": chunk.content,
-            "source_page": chunk.source_page,
-            "char_start": chunk.char_start,
-            "char_end": chunk.char_end,
-            "char_length": len(chunk.content),
-            "metadata": chunk.metadata or {},
+        file_name = docling_result.get("metadata", {}).get("file_name", "unknown")
+        file_type = self._determine_file_type(file_name)
+
+        # Get images and complexity info
+        images = content.get("images", [])
+        document_complex, modality = self._analyze_document_complexity(content)
+
+        # Create lookup dictionary for efficient image matching
+        image_lookup = {
+            img.get("image_id", f"img_{i}"): img for i, img in enumerate(images)
         }
-        chunks_data.append(chunk_data)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(
-            {"total_chunks": len(chunks_data), "chunks": chunks_data},
-            f,
-            indent=2,
-            ensure_ascii=False,
-        )
+        # Process page-by-page if page_markdown is provided
+        if page_markdown:
+            for page_num, page_text in page_markdown.items():
+                if not page_text.strip():
+                    continue
+
+                # Adjust page number to be 1-indexed
+                page_number = page_num + 1
+
+                # Split page text into chunks while preserving page info
+                page_chunks = self._split_text_into_chunks(
+                    page_text,
+                    page_number,  # Use actual page number
+                    file_type,
+                    f"p{page_number}",  # Page prefix
+                    image_lookup,
+                    document_complex,
+                    modality,
+                    file_name,
+                )
+                chunks.extend(page_chunks)
+
+            # Process images separately (they already have page numbers)
+            for i, image in enumerate(images):
+                image_content_parts = []
+
+                if image.get("caption"):
+                    image_content_parts.append(f"Image Caption: {image['caption']}")
+                if image.get("ocr_text"):
+                    image_content_parts.append(f"Image Text (OCR): {image['ocr_text']}")
+
+                if image_content_parts:
+                    image_content = "\n".join(image_content_parts)
+                    image_page = image.get("page_number", 1)
+
+                    metadata = self._create_chunk_metadata(
+                        file_type,
+                        file_name,
+                        [image],
+                        document_complex,
+                        modality,
+                        has_caption=bool(image.get("caption")),
+                        has_ocr_text=bool(image.get("ocr_text")),
+                        primary_image=True,
+                    )
+
+                    # Use image's actual page number
+                    chunk = self._create_chunk(
+                        image_content,
+                        f"chunk_img_{image_page}_{i}",
+                        image_page,
+                        0,  # Image chunks don't have meaningful char positions
+                        len(image_content),
+                        metadata,
+                    )
+                    chunks.append(chunk)
+
+        else:
+            # Fallback to original processing if no page_markdown provided
+            return self.chunk_docling_result(docling_result)
+
+        return chunks
 
 
-def extract_text_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
-    text_chunks_data = []
+# Create complete nodes document with file metadata
+def create_nodes_document(
+    chunks: List[Chunk],
+    file_name: str = None,
+    file_sha256: str = None,
+    user: str = None,
+) -> Dict[str, Any]:
+    source_mime = "application/octet-stream"
+    if file_name:
+        chunker = DocumentChunker()
+        source_mime = chunker._determine_file_type(file_name)
+
+    nodes_doc = extract_nodes(chunks, file_sha256, user, source_mime)
+
+    return nodes_doc
+
+
+# Extract unified nodes list compatible with LlamaIndex v0.12.x TextNode/ImageNode schema
+def extract_nodes(
+    chunks: List[Chunk],
+    file_sha256: str = None,
+    user: str = None,
+    source_mime: str = None,
+) -> Dict[str, Any]:
+    nodes = []
+    text_counter = 0
+    image_counter = 0
+
+    # Extract last 4 characters of SHA256 for collision-resistant ID scheme
+    sha4 = file_sha256[-4:] if file_sha256 and len(file_sha256) >= 4 else "0000"
+
     for chunk in chunks:
         chunk_metadata = chunk.metadata or {}
-
         chunk_images = chunk_metadata.get("images", [])
-        chunk_image_ids = []
-        for image in chunk_images:
-            image_id = image.get("image_id", "")
-            if image_id:
-                chunk_image_ids.append(image_id)
 
-        text_chunk_data = {
-            "chunk_id": chunk.chunk_id,
-            "image_context": chunk_image_ids,  # Only this chunk's images
+        text_counter += 1
+        node_id = f"t_{sha4}_{chunk.source_page:03d}_{text_counter:03d}"
+
+        # Pre-calculate image node IDs for cross-referencing
+        image_refs = []
+        chunk_image_start = image_counter + 1
+        for i, image in enumerate(chunk_images):
+            # Use the image's own page_number for proper page assignment
+            image_page = image.get("page_number", 1)
+            image_refs.append(
+                f"img_{sha4}_{image_page:03d}_{chunk_image_start + i:03d}"
+            )
+
+        text_node = {
+            "id_": node_id,
+            "type": "text",
             "text": chunk.content,
-            "page_number": chunk.source_page,
-            "source_type": chunk_metadata.get("source_type", ""),
-            "file_name": chunk_metadata.get("file_name", ""),
-            "source_page": chunk.source_page,
-            "char_start": chunk.char_start,
-            "char_end": chunk.char_end,
-            "char_length": len(chunk.content),
-            "document_complex": chunk_metadata.get("document_complex", False),
-            "modality": ["text"],
-            "has_tables": chunk_metadata.get("has_tables", False),
-            "format": "text/plain",
+            "metadata": {
+                "file_name": chunk_metadata.get("file_name", ""),
+                "char_start": chunk.char_start,
+                "char_len": len(chunk.content),
+                "is_complex": chunk_metadata.get("document_complex", False),
+                "has_tables": chunk_metadata.get("has_tables", False),
+                "image_refs": image_refs,
+                # Include page number only if chunk has valid page info (from page-aware chunking)
+                **(
+                    {"page": chunk.source_page}
+                    if chunk.source_page and chunk.source_page > 0
+                    else {}
+                ),
+            },
+            "relationships": {},
+            "embedding": None,
         }
-        text_chunks_data.append(text_chunk_data)
+        nodes.append(text_node)
 
-    return {
-        "total_chunks": len(text_chunks_data),
-        "chunks": text_chunks_data,
-    }
+        # Create image nodes with proper relationships to parent text
+        for i, image in enumerate(chunk_images):
+            image_counter += 1
+            # Use the image's own page_number for proper page assignment
+            image_page = image.get("page_number", 1)
+            image_node_id = f"img_{sha4}_{image_page:03d}_{image_counter:03d}"
 
-
-def extract_image_chunks(chunks: List[Chunk]) -> Dict[str, Any]:
-    image_counter = 1
-    image_chunks_data = []
-
-    for chunk in chunks:
-        chunk_metadata = chunk.metadata or {}
-        images = chunk_metadata.get("images", [])
-
-        # Only process chunks that have images
-        if images:
-            for image in images:
-                distinct_image_id = f"image_{image_counter}"
-                image_counter += 1
-
-                image_chunk_data = {
-                    "chunk_id": chunk.chunk_id,
-                    "image_id": distinct_image_id,
-                    "page_number": image.get("page_number", chunk.source_page),
-                    "source_type": chunk_metadata.get("source_type", ""),
+            image_node = {
+                "id_": image_node_id,
+                "type": "image",
+                "image": image.get("base64", ""),
+                "metadata": {
                     "file_name": chunk_metadata.get("file_name", ""),
-                    "source_page": image.get("page_number", chunk.source_page),
-                    "char_start": chunk.char_start,
-                    "char_end": chunk.char_end,
-                    "char_length": len(chunk.content),
-                    "document_complex": chunk_metadata.get("document_complex", False),
-                    "modality": ["images"],
-                    "has_tables": chunk_metadata.get("has_tables", False),
-                    "image_data_base64": image.get("base64", ""),
-                    "format": image.get("format", "PNG"),
-                }
-                image_chunks_data.append(image_chunk_data)
+                    "page": image_page,
+                },
+                "relationships": {"source": node_id},
+                "embedding": None,
+            }
+            nodes.append(image_node)
 
     return {
-        "total_images": len(image_chunks_data),
-        "images": image_chunks_data,
+        "file_sha256": file_sha256,
+        "user": user,
+        "source_mime": source_mime,
+        "total_nodes": len(nodes),
+        "nodes": nodes,
     }
