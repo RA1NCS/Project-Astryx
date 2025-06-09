@@ -627,7 +627,7 @@ def extract_nodes(
         chunk_images = chunk_metadata.get("images", [])
 
         text_counter += 1
-        node_id = f"t_{sha4}_{chunk.source_page:03d}_{text_counter:03d}"
+        node_id = f"txt_{sha4}_p{chunk.source_page:02d}_c{text_counter:02d}"
 
         # Pre-calculate image node IDs for cross-referencing
         image_refs = []
@@ -636,7 +636,7 @@ def extract_nodes(
             # Use the image's own page_number for proper page assignment
             image_page = image.get("page_number", 1)
             image_refs.append(
-                f"img_{sha4}_{image_page:03d}_{chunk_image_start + i:03d}"
+                f"img_{sha4}_p{image_page:02d}_i{chunk_image_start + i:02d}"
             )
 
         text_node = {
@@ -667,7 +667,7 @@ def extract_nodes(
             image_counter += 1
             # Use the image's own page_number for proper page assignment
             image_page = image.get("page_number", 1)
-            image_node_id = f"img_{sha4}_{image_page:03d}_{image_counter:03d}"
+            image_node_id = f"img_{sha4}_p{image_page:02d}_i{image_counter:02d}"
 
             image_node = {
                 "id_": image_node_id,
@@ -677,7 +677,7 @@ def extract_nodes(
                     "file_name": chunk_metadata.get("file_name", ""),
                     "page": image_page,
                 },
-                "relationships": {"source": node_id},
+                "relationships": {"1": {"node_id": node_id, "node_type": "1"}},
                 "embedding": None,
             }
             nodes.append(image_node)
