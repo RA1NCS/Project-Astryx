@@ -1,3 +1,4 @@
+import base64
 import os
 from azure.storage.blob import BlobServiceClient
 from typing import Dict, Tuple
@@ -23,6 +24,21 @@ class BlobStorageManager:
             self.blob_service_client.create_container(self.processed_container)
         except Exception:
             pass
+
+    # Upload base64 image to Azure blob storage and return public URL
+    def upload_image(self, tenant, image_base64, image_id):
+        if not image_base64:
+            raise Exception("No image found to upload")
+
+        try:
+            data = base64.b64decode(image_base64)
+            blob_name = f"{tenant}/images/{image_id}.png"
+            return self.upload_processed_file(
+                blob_name, data, tags={"status": "indexed"}, content_type="image/png"
+            )
+
+        except Exception as e:
+            raise Exception(f"Failed to upload image: {e}")
 
     def upload_processed_file(
         self,
