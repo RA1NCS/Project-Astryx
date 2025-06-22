@@ -1,0 +1,538 @@
+{
+  "total_nodes": 27,
+  "nodes": [
+    {
+      "source_mime": "application/pdf",
+      "char_len": 903,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [
+        "img_2920_p05_i01",
+        "img_2920_p04_i02"
+      ],
+      "chunk_id": "txt_2920_p01_c01",
+      "user": "dev",
+      "is_complex": true,
+      "ingestor": "llamaindex",
+      "text": "## CS 380: Artificial Intelligence\n\n## Assignment 1\n\n## Rush Hour (20 pts)\n\nRush Hour [ https://www.thinkfun.com/products/rush-hour/ ] is a puzzle game that involves sliding \"vehicles\" around a grid to alleviate gridlock and free your \"car\" from the traffic jam The real game looks like this:\n\n<!-- image -->\n\n<!-- image -->\n\nIn the game, each vehicle slides only in its normal direction of travel\u2014that is, forward and backward, not side-to-side The red car in the middle is your car, and your goal in the game is to free up space such that the red car can escape out of the opening on the right This assignment involves implementing different search algorithms that can solve a given Rush Hour board You are given an implementation of the game itself, which allows you to create a game state, get possible actions from that state, execute chosen actions, and determine whether the goal has been reached",
+      "has_tables": false,
+      "page": 1,
+      "char_start": 0,
+      "uuid": "9f6ea64b-ab77-5269-ac13-7d749f95210f",
+      "relationships": {
+        "hasImages": [
+          "f6309bfa-0e5e-5b37-b577-49ba3b0e9826",
+          "39b53d3d-957f-5936-b783-33223e2585bd"
+        ]
+      },
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "image_refs": [],
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "char_len": 903,
+      "chunk_id": "txt_2920_p01_c02",
+      "user": "dev",
+      "char_start": 127,
+      "ingestor": "llamaindex",
+      "text": "are given an implementation of the game itself, which allows you to create a game state, get possible actions from that state, execute chosen actions, and determine whether the goal has been reached Your task is to build search algorithms that explore the game's search space and find solution paths that solve a given puzzle ## Implementation Setup\n\nAs part of the assignment, you have been given a file rushhour.py that provides an implementation of the state representation for the Rush Hour game, including computation of possible legal actions As you can see in the code, we use a simple string as a base representation for a state:\n\nDefault\n\n\" b aa| b |xxb |ccc d| d| d\"\n\nThis string specifies 6 rows of a board, where each row is a sequence with characters to denote the game \"vehicles\" (colored vehicle pieces) and spaces to denote an empty cell The 6 rows are separated by the vertical line '|'",
+      "is_complex": true,
+      "page": 1,
+      "has_tables": false,
+      "uuid": "9a6dadad-c529-5f85-ae7a-9c0502f403e1",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 1000,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p01_c03",
+      "user": "dev",
+      "char_start": 258,
+      "ingestor": "llamaindex",
+      "text": "of a board, where each row is a sequence with characters to denote the game \"vehicles\" (colored vehicle pieces) and spaces to denote an empty cell The 6 rows are separated by the vertical line '|' Each vehicle is denoted by a unique letter, and as in the real game, vehicles can occupy 2 or 3 spaces, horizontally or vertically For example, the sample board above contains five vehicles denoted by 'a', 'b', 'c', 'd', and 'x' characters The 'x' vehicle is your car\u2014the car you need to move to the right-hand side exit to finish the game successfully The given code in rushhour.py parses this string for you and creates an internal representation with a 2-dimensional array, with helper functions to get and put characters in the cell locations It includes methods is\\_goal() to determine whether the current state is a solution state, actions() to return the possible legal actions from the current state, and execute(action) to execute an action within the current state In addition, the code allows",
+      "has_tables": false,
+      "page": 1,
+      "is_complex": true,
+      "uuid": "b106e8cc-0e7d-545e-bf46-aec87682bdd7",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 997,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [
+        "img_2920_p05_i03",
+        "img_2920_p04_i04"
+      ],
+      "chunk_id": "txt_2920_p02_c04",
+      "user": "dev",
+      "char_start": 0,
+      "ingestor": "llamaindex",
+      "has_tables": false,
+      "text": "for command-line arguments for basic testing For example, the print command displays a pretty-printed color version of the default board:\n\n- &gt; python3 rushhour.py print\n\n<!-- image -->\n\nWe can also pass a different board string to the program as follows:\n\n```\n> python3 rushhour.py print \" b aa| b |xxb |ccc d| ggg d| d\"\n```\n\n<!-- image -->\n\nAdditional commands check whether a state is the goal state, and what actions are possible from a given state, as below (If a board string is not provided, the program uses the default board shown earlier.)\n\n```\n> python3 rushhour.py goal False > python3 rushhour.py actions move \"a\" (4,5)-(5,5) (-1,0) move \"c\" (0,2)-(2,2) (1,0) move \"c\" (0,2)-(2,2) (2,0) move \"d\" (5,0)-(5,2) (0,1) move \"d\" (5,0)-(5,2) (0,2)\n```\n\nThe latter command shows 5 possible actions, each of which lists the character denoting the vehicle (e.g., \"a\", \"c\", etc.), the grid span of that vehicle (start \u2013 end), and the possible deltas for changing the vehicles position (dx, dy)",
+      "page": 2,
+      "is_complex": true,
+      "uuid": "4f477e0d-c950-5585-a94a-5aae288887e0",
+      "relationships": {
+        "hasImages": [
+          "273607a1-7bbe-5084-88e2-f37b77b4bb35",
+          "4be2e0bd-f874-5c15-b900-c41b8ac0ecd9"
+        ]
+      },
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 725,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p02_c05",
+      "user": "dev",
+      "char_start": 322,
+      "ingestor": "llamaindex",
+      "text": "each of which lists the character denoting the vehicle (e.g., \"a\", \"c\", etc.), the grid span of that vehicle (start \u2013 end), and the possible deltas for changing the vehicles position (dx, dy) (Note: If color printing isn't working on your terminal display, you can disable it by editing util.py and changing \"PRINT\\_IN\\_COLOR\" to False.)\n\n## Implementing an Agent\n\nFor this assignment, you will be coding an agent in a file agent.py that interacts with and solves a given Rush Hour puzzle using various algorithms This assignment, and all assignments for this course, will use python3 Please note that you may only use built-in standard libraries (e.g., math, random, etc.); you may not use any external libraries or packages",
+      "has_tables": false,
+      "page": 2,
+      "is_complex": true,
+      "uuid": "9f7922a2-f5a0-5dac-a4d5-51156120a7b0",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 570,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p02_c06",
+      "user": "dev",
+      "char_start": 698,
+      "ingestor": "llamaindex",
+      "text": "and all assignments for this course, will use python3 Please note that you may only use built-in standard libraries (e.g., math, random, etc.); you may not use any external libraries or packages (If you have any questions at all about what is allowable, please email the instructor.)\n\n## Node and Agent Classes\n\nAs discussed in lecture, when searching through a state space, we typically use a node structure where each node includes both a state and some extra information used by the search\u2014namely, a pointer to its parent node (to maintain path information for how we",
+      "has_tables": false,
+      "page": 2,
+      "is_complex": true,
+      "uuid": "e067b2d9-207c-5ebc-9428-b73ff711cf80",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 908,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p03_c07",
+      "user": "dev",
+      "is_complex": true,
+      "ingestor": "llamaindex",
+      "has_tables": false,
+      "text": "arrived at this state), and sometimes a state value (for informed search algorithms like A* where we assign a numeric value to a state) Your first task is to implement a class Node that captures this information This code should be put in agent.py Next, also in agent.py, implement a new class Agent which will serve as the foundation for building the search algorithms below Specifically, each of the search algorithms will be a method within the Agent class Note that this separation between Agent and State classes allows us to use the same agent for multiple problem domains, and also allows us to use different agents on the same problem domain; we will not make much use of this flexibility in this assignment, but future work could exploit this architecture to a fuller extent ## Random Walk\n\nWrite a method for your Agent class, random\\_walk(state, n), that does a random walk through the state space",
+      "page": 3,
+      "char_start": 0,
+      "uuid": "9fa63389-4430-512f-baa9-f43777ed5065",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 977,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p03_c08",
+      "user": "dev",
+      "char_start": 194,
+      "ingestor": "llamaindex",
+      "text": "but future work could exploit this architecture to a fuller extent ## Random Walk\n\nWrite a method for your Agent class, random\\_walk(state, n), that does a random walk through the state space Specifically, given a positive integer N, the random walk should generate all the possible next states from the current state, select one at random, then repeat until N states have been visited Your code should build nodes (using your Node class) and, when the walk is completed, use the final node to generate and return the list of N states visited on the random walk Create a new file search.py and add a \"random\" command-line command to print the resulting sequence of states returned by agent.random\\_walk() It should work on a state given on the command line, or, if there is no state argument, on the default state (The \\_\\_main\\_\\_ code in rushhour.py can be used as a starter for your own command-line code.) Please assume that N=8 here (this can be hard-coded into search.py)",
+      "has_tables": false,
+      "page": 3,
+      "is_complex": true,
+      "uuid": "865c06c5-89c7-5e8e-868f-02e164e020ad",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 867,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [
+        "img_2920_p05_i05"
+      ],
+      "chunk_id": "txt_2920_p03_c09",
+      "user": "dev",
+      "char_start": 320,
+      "ingestor": "llamaindex",
+      "has_tables": false,
+      "text": "argument, on the default state (The \\_\\_main\\_\\_ code in rushhour.py can be used as a starter for your own command-line code.) Please assume that N=8 here (this can be hard-coded into search.py) The code you've been given in util.py includes a helper function that will pretty-print a list of states: util.pprint(states) Here are two examples:\n\n- &gt; python3 search.py random\n\n<!-- image -->\n\nNote that, because this is a random walk, the code will do different things for each run, so your runs will likely not match those above ## Breadth-First Search, Depth-First Search, and A* Search\n\nWrite methods for your Agent class bfs(state) , dfs(state), and a\\_star(state, heuristic) that implement the respective search algorithms First, note that all these algorithms have a common base algorithm, described at a high level in the \"Graph-Search\" algorithm in Lecture 4",
+      "page": 3,
+      "is_complex": true,
+      "uuid": "03cf24be-aa48-58d0-a69a-4dbe138aeca2",
+      "relationships": {
+        "hasImages": [
+          "43c4a3af-86d5-5fe5-8b1b-af0b887185b2"
+        ]
+      },
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 405,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p03_c10",
+      "user": "dev",
+      "is_complex": true,
+      "ingestor": "llamaindex",
+      "text": "heuristic) that implement the respective search algorithms First, note that all these algorithms have a common base algorithm, described at a high level in the \"Graph-Search\" algorithm in Lecture 4 In essence, all of the algorithms:\n\n- \uf0b7 Maintain a list of open nodes, namely the nodes that have yet to be considered in the search process The initial list of open nodes contains only the given start state",
+      "has_tables": false,
+      "page": 3,
+      "char_start": 461,
+      "uuid": "6adad63b-07b5-5efe-8526-b36a77aa8f30",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 881,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p04_c11",
+      "user": "dev",
+      "char_start": 0,
+      "ingestor": "llamaindex",
+      "has_tables": false,
+      "text": "- \uf0b7 Maintain a list of closed nodes, namely the nodes that have already been considered The initial list of closed nodes is empty, but as a node is considered, it is added onto this list - \uf0b7 The algorithms differ with respect to how they select a node from the open-node list to consider: breadth-first search and A* pop off the first node in the list, whereas depth-first search pops off the last node in the list In addition, A* gives each node a value (i.e., \ud835\udc53(\ud835\udc5b) = \ud835\udc54(\ud835\udc5b) + \u210e(\ud835\udc5b)), and the list of open nodes should be kept sorted by value at each iteration - \uf0b7 When a new node is considered, if that node is the goal, we are done and can return the solution node Otherwise, we expand the node by adding its next states to the open-node list, and continue searching Write a method for your Agent class \\_search() with whatever arguments are needed to implement this base algorithm",
+      "page": 4,
+      "is_complex": true,
+      "uuid": "0fb29df2-6f6f-5696-9a44-83e298a3e8e6",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 995,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p04_c12",
+      "user": "dev",
+      "char_start": 146,
+      "ingestor": "llamaindex",
+      "text": "the node by adding its next states to the open-node list, and continue searching Write a method for your Agent class \\_search() with whatever arguments are needed to implement this base algorithm Then, your implementations of bfs() , dfs(), and a\\_star() should call this base method with appropriate arguments to differentiate how they work (In other words, the real work of the search is being done in the base \\_search() method; the other methods are simply telling this method how to search.)\n\nFor A* search, there is one additional argument, namely the heuristic function, passed into the agent method a\\_star(state, heuristic) The heuristic function \u210e(\ud835\udc5b) provides a value for a given state For Rush Hour, you will need to choose and implement an admissible heuristic function \u210e(\ud835\udc5b), such that A* can reasonably estimate the minimum cost from a given state to the goal state This heuristic function should be put into search.py so that it can be passed to agent when running the A* algorithm",
+      "is_complex": true,
+      "page": 4,
+      "has_tables": false,
+      "uuid": "9ceb5900-3499-5790-b173-75b8b5142075",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 835,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [
+        "img_2920_p05_i06",
+        "img_2920_p04_i07",
+        "img_2920_p04_i08",
+        "img_2920_p04_i09",
+        "img_2920_p04_i10"
+      ],
+      "chunk_id": "txt_2920_p04_c13",
+      "user": "dev",
+      "is_complex": true,
+      "ingestor": "llamaindex",
+      "text": "A* can reasonably estimate the minimum cost from a given state to the goal state This heuristic function should be put into search.py so that it can be passed to agent when running the A* algorithm In addition, at each iteration of the search, print the path to the node being considered\u2014 the \"path\" here being the list of states from the initial state to the current state You should again use the provided utility function util.pprint(states) to print the list of states Finally, add command-line commands \"bfs\", \"dfs\", and \"a\\_star\" to search.py such that the commands call their respective search algorithms Here are some examples:\n\n&gt; python3 search.py bfs\n\n\u2026 and the rest of the paths searched, ending with the solution and number of paths explored <!-- image -->\n\n<!-- image -->\n\n<!-- image -->\n\n<!-- image -->\n\n<!-- image -->",
+      "has_tables": false,
+      "page": 4,
+      "char_start": 322,
+      "uuid": "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a",
+      "relationships": {
+        "hasImages": [
+          "591fa0c0-dc0d-5cb3-a557-47adbf077c53",
+          "51bb7928-a80c-5499-be43-fe0ce967db11",
+          "554f8624-9769-5f96-9454-c2a69d10fc12",
+          "faabc112-6eb8-577d-bfd5-59b515d49f75",
+          "680bf9cf-c236-553c-9a9f-ab24242e07b6"
+        ]
+      },
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i02",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i02.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "39b53d3d-957f-5936-b783-33223e2585bd",
+      "relationships": {
+        "belongsToText": [
+          "9f6ea64b-ab77-5269-ac13-7d749f95210f"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i04",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i04.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "4be2e0bd-f874-5c15-b900-c41b8ac0ecd9",
+      "relationships": {
+        "belongsToText": [
+          "4f477e0d-c950-5585-a94a-5aae288887e0"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i07",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i07.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "51bb7928-a80c-5499-be43-fe0ce967db11",
+      "relationships": {
+        "belongsToText": [
+          "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i08",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i08.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "554f8624-9769-5f96-9454-c2a69d10fc12",
+      "relationships": {
+        "belongsToText": [
+          "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i09",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i09.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "faabc112-6eb8-577d-bfd5-59b515d49f75",
+      "relationships": {
+        "belongsToText": [
+          "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p04_i10",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p04_i10.png",
+      "ingestor": "llamaindex",
+      "page": 4,
+      "uuid": "680bf9cf-c236-553c-9a9f-ab24242e07b6",
+      "relationships": {
+        "belongsToText": [
+          "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 857,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [
+        "img_2920_p05_i11"
+      ],
+      "chunk_id": "txt_2920_p05_c14",
+      "user": "dev",
+      "char_start": 0,
+      "ingestor": "llamaindex",
+      "text": "<!-- image -->\n\nIn this case, BFS took 97 iterations to find a solution Because the given code in rushhour.py sorts actions into a particular order, your BFS results should be the same Your DFS may be faster or slower, but may not find an optimal solution path Your A* should be as fast or faster than BFS, and should also the optimal solution path Here are two alternative boards for testing:\n\n```\n\"abb |a c |axxc | c e|dff e|d ggge\" \" a | abb|xx d |e fdgg|e fhhi|e f i\"\n```\n\nAs mentioned earlier, your code should allow alternative boards to be run from the command line, just as rushhour.py does; for example, this command would run A* on the first board above:\n\n```\npython3 search.py a_star \"abb |a c |axxc | c e|dff e|d ggge\"\n```\n\nYou might consider constructing additional examples that are very close to a solution to make it easier to test your code",
+      "has_tables": true,
+      "page": 5,
+      "is_complex": true,
+      "uuid": "8c1db010-f4ca-5483-b98e-c170574aaeb4",
+      "relationships": {
+        "hasImages": [
+          "62688cce-9279-5f42-bc2c-4ac7a97668c6"
+        ]
+      },
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "image_refs": [],
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "char_len": 808,
+      "chunk_id": "txt_2920_p05_c15",
+      "user": "dev",
+      "char_start": 609,
+      "ingestor": "llamaindex",
+      "has_tables": false,
+      "text": "above:\n\n```\npython3 search.py a_star \"abb |a c |axxc | c e|dff e|d ggge\"\n```\n\nYou might consider constructing additional examples that are very close to a solution to make it easier to test your code ## Submission\n\nFor this assignment, you should submit the following Python files:\n\n- \uf0b7 rushhour.py \u2013 the original puzzle code given to you for this assignment (you should not modify this file in any way)\n- \uf0b7 util.py \u2013 the original utilities code given to you for this assignment (you should not modify this file in any way)\n- \uf0b7 agent.py \u2013 your code for the search agent\n- \uf0b7 search.py \u2013 your code for running everything with command-line arguments\n\nPlease compress your files into a single ZIP file and submit the ZIP file electronically on Blackboard\u2014please do not email your assignment to a TA or instructor",
+      "page": 5,
+      "is_complex": true,
+      "uuid": "7cdc8751-4b19-5401-9964-864a8016784c",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "char_len": 483,
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "image_refs": [],
+      "chunk_id": "txt_2920_p05_c16",
+      "user": "dev",
+      "char_start": 835,
+      "ingestor": "llamaindex",
+      "text": "with command-line arguments\n\nPlease compress your files into a single ZIP file and submit the ZIP file electronically on Blackboard\u2014please do not email your assignment to a TA or instructor ## Academic Honesty\n\nPlease remember that all material submitted for this assignment (and all assignments for this course) must be created by you, on your own, without help from anyone except the course TA(s) or instructor(s) Any material taken from outside sources must be appropriately cited",
+      "has_tables": false,
+      "page": 5,
+      "is_complex": true,
+      "uuid": "afc2020e-f99c-5be9-a405-4ea9a750ec5e",
+      "type": "text"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p05_i01",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p05_i01.png",
+      "ingestor": "llamaindex",
+      "page": 5,
+      "uuid": "f6309bfa-0e5e-5b37-b577-49ba3b0e9826",
+      "relationships": {
+        "belongsToText": [
+          "9f6ea64b-ab77-5269-ac13-7d749f95210f"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p05_i03",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p05_i03.png",
+      "ingestor": "llamaindex",
+      "page": 5,
+      "uuid": "273607a1-7bbe-5084-88e2-f37b77b4bb35",
+      "relationships": {
+        "belongsToText": [
+          "4f477e0d-c950-5585-a94a-5aae288887e0"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p05_i05",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p05_i05.png",
+      "ingestor": "llamaindex",
+      "page": 5,
+      "uuid": "43c4a3af-86d5-5fe5-8b1b-af0b887185b2",
+      "relationships": {
+        "belongsToText": [
+          "03cf24be-aa48-58d0-a69a-4dbe138aeca2"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p05_i06",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p05_i06.png",
+      "ingestor": "llamaindex",
+      "page": 5,
+      "uuid": "591fa0c0-dc0d-5cb3-a557-47adbf077c53",
+      "relationships": {
+        "belongsToText": [
+          "8e565ca4-6e50-546c-81b2-d3fbf6d4ef5a"
+        ]
+      },
+      "type": "image"
+    },
+    {
+      "source_mime": "application/pdf",
+      "file_sha256": "09977c3cfe6a458bc94281a690818dbda06d2c23e0d3b2daec1bf02a23d62920",
+      "total_nodes": 27,
+      "file_name": "images_1.pdf",
+      "chunk_id": "img_2920_p05_i11",
+      "user": "dev",
+      "image_url": "https://astryxstoringest.blob.core.windows.net/processed/dev/images/img_2920_p05_i11.png",
+      "ingestor": "llamaindex",
+      "page": 5,
+      "uuid": "62688cce-9279-5f42-bc2c-4ac7a97668c6",
+      "relationships": {
+        "belongsToText": [
+          "8c1db010-f4ca-5483-b98e-c170574aaeb4"
+        ]
+      },
+      "type": "image"
+    }
+  ]
+}

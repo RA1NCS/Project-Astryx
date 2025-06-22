@@ -22,10 +22,10 @@ load_dotenv()
 warnings.filterwarnings(
     "ignore",
     category=DeprecationWarning,
-    message=".*PydanticDeprecatedSince20.*",
+    message=".*PydanticDeprecatedSince2.*",
 )
 
-_blob_mgr = BlobStorageManager(os.getenv("AZURE_STORAGE_CONNECTION_STRING"))
+blob_storage = BlobStorageManager(os.getenv("AZURE_STORAGE_CONNECTION_STRING"))
 
 # Schema definitions - single source of truth
 COMMON_SCHEMA = {
@@ -46,13 +46,11 @@ TEXT_SCHEMA = {
     "is_complex": wvc.config.DataType.BOOL,
     "has_tables": wvc.config.DataType.BOOL,
     "image_refs": wvc.config.DataType.TEXT_ARRAY,
-    "ingestor": wvc.config.DataType.TEXT,
 }
 
 IMAGE_SCHEMA = {
     **COMMON_SCHEMA,
     "image_url": wvc.config.DataType.TEXT,
-    "ingestor": wvc.config.DataType.TEXT,
 }
 
 
@@ -79,12 +77,6 @@ def initialize_collections(client):
                 properties.append(
                     wvc.config.Property(
                         name=prop_name, data_type=data_type, index_searchable=True
-                    )
-                )
-            elif prop_name == "ingestor":
-                properties.append(
-                    wvc.config.Property(
-                        name=prop_name, data_type=data_type, index_searchable=False
                     )
                 )
             else:
@@ -141,25 +133,6 @@ def get_collection_name(node_type):
         raise ValueError(f"Unknown node_type: {node_type}")
 
 
-# Upload base64 image to Azure blob storage and return public URL
-def upload_image(node):
-    raw = node.get("image")
-
-    if not raw:
-        raise Exception("No image found to upload")
-
-    try:
-        data = base64.b64decode(raw)
-        username = node["metadata"]["user"]
-        blob_name = f"{username}/images/{node['id_']}.png"
-        return _blob_mgr.upload_processed_file(
-            blob_name, data, tags={"status": "indexed"}, content_type="image/png"
-        )
-
-    except Exception as e:
-        raise Exception(f"Failed to upload image: {e}")
-
-
 # Build Weaviate properties dict from node data using direct extraction
 def build_properties(node):
     # Get base properties from metadata and node
@@ -171,12 +144,13 @@ def build_properties(node):
         "user": node["metadata"].get("user"),
         "source_mime": node["metadata"].get("source_mime"),
         "total_nodes": node["metadata"].get("total_nodes"),
-        "ingestor": node["metadata"].get("ingestor"),
     }
 
     # Add type-specific properties
     if node["type"] == "image":
-        properties["image_url"] = upload_image(node)
+        properties["image_url"] = blob_storage.upload_image(
+            properties["user"], node.get("image"), properties["chunk_id"]
+        )
     else:  # text
         properties.update(
             {
@@ -332,7 +306,7 @@ def ingest(node_dicts):
     if not username:
         raise ValueError("No username found in node metadata")
 
-    client =  ()
+    client = get_client()
 
     initialize_collections(client)
 

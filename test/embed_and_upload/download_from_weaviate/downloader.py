@@ -4,7 +4,7 @@ import re
 import sys
 
 sys.path.append("..")
-from upload_nodes import get_client
+from upload import get_client
 import weaviate.classes as wvc
 
 

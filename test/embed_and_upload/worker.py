@@ -1,6 +1,6 @@
 import json
-from embed_nodes import add_embeddings, add_metadata
-from upload_nodes import ingest
+from embed import add_embeddings, add_metadata
+from upload import ingest
 
 file_path = "output/input.json"
 
