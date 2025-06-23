@@ -1,0 +1,42 @@
+-   [x] Connect to weaviate client
+-   [x] Load chunks for ingestion
+-   [x] Collection initialization with:
+    -   [x] Multi tenancy
+    -   [x] Quantization / Compression
+    -   [x] Explicit schema definition
+-   [x] Collection operations
+    -   [x] Create
+    -   [x] Get
+    -   [x] Update Configuration
+        -   [x] BM25 Parameters (k1, b)
+        -   [x] Multi-tenancy Settings
+        -   [x] Vector Index Configuration
+        -   [x] HNSW/Flat Quantization
+    -   [x] Delete
+    -   [x] Add Cross-References
+-   [x] Tenant Operations
+    -   [x] Create
+    -   [x] Get Single Tenant
+    -   [x] Get Multiple Tenants
+    -   [x] Get Tenant Names Only
+    -   [x] Delete
+    -   [x] Get Tenant State
+    -   [x] Set/Update Tenant State
+    -   [x] Get Tenants by State
+    -   [x] Get All Tenants with States
+    -   [x] Offload Inactive Tenants
+-   [ ] Data Ingestion (Single & Batch)
+    -   [ ] Create
+    -   [ ] Read
+    -   [ ] Update
+    -   [ ] Delete
+-   [ ] Querying & Search
+    -   [ ] Vector Search
+    -   [ ] Keyword Search
+    -   [ ] Hybrid Search
+    -   [ ] Metadata
+-   [ ] Data Safety
+    -   [ ] Backup
+    -   [ ] Restore
+    -   [ ] Migrate data between clusters
+    -   [ ] Migrate data between collections
