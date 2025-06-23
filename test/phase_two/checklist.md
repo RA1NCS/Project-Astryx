@@ -26,15 +26,15 @@
     -   [x] Get All Tenants with States
     -   [x] Offload Inactive Tenants
 -   [ ] Data Ingestion (Single & Batch)
-    -   [ ] Create
-    -   [ ] Read
-    -   [ ] Update
-    -   [ ] Delete
--   [ ] Querying & Search
-    -   [ ] Vector Search
-    -   [ ] Keyword Search
-    -   [ ] Hybrid Search
-    -   [ ] Metadata
+    -   [ ] Create Object
+    -   [ ] Read Object
+    -   [ ] Update Object
+    -   [ ] Delete Object
+    -   [ ] Get Metadata
+-   [x] Querying & Search
+    -   [x] Vector Search
+    -   [x] Keyword Search
+    -   [x] Hybrid Search
 -   [ ] Data Safety
     -   [ ] Backup
     -   [ ] Restore

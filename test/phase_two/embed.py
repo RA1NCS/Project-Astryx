@@ -53,6 +53,10 @@ class Embedder:
 
         return nodes
 
+    # Get embedding for text
+    def get_embedding(self, text):
+        return self.embedding_model.get_text_embedding(text)
+
     # Add embeddings to node dictionaries using unified embedding model
     def add_embeddings(self, data):
         for chunk in data:
@@ -62,8 +66,6 @@ class Embedder:
                 "text",
             ], f"Unknown chunk type: {chunk.get('type')}"
 
-            chunk["embedding"] = self.embedding_model.get_text_embedding(
-                chunk[chunk_type]
-            )
+            chunk["embedding"] = self.get_embedding(chunk[chunk_type])
 
         return data
