@@ -1,17 +1,36 @@
+import base64
 import os
 import sys
+from dotenv import load_dotenv
+import filetype
+
+load_dotenv()
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
-from preproc.utils.model_loaders import create_embedding_model
+from preproc.utils.model_loaders import get_embedding as embed
 
-EMBEDDING_DIM = 1536
+
+def get_data_url(b64_data):
+    # If it already has a comma, remove any existing data URI header
+    if "," in b64_data:
+        b64_data = b64_data.split(",")[1]
+
+    # Decode to bytes to detect type
+    img_bytes = base64.b64decode(b64_data)
+
+    # Detect MIME type
+    kind = filetype.guess(img_bytes)
+    mime = kind.mime if kind else "application/octet-stream"
+
+    # Return full data URI
+    return f"data:{mime};base64,{b64_data}"
 
 
 # Load JSON data and prepare node dictionaries with file-level metadata
 def add_metadata(data):
-    nodes = []
+    chunks = []
 
-    # Extract file-level metadata to add to all nodes
+    # Extract file-level metadata to add to all chunks
     file_metadata = {
         "file_sha256": data.get("file_sha256"),
         "user": data.get("user"),
@@ -43,18 +62,34 @@ def add_metadata(data):
                 "embedding": None,
             }
         else:
-            raise ValueError(f"Unknown node type: {chunk.get('type')}")
+            raise ValueError(f"Unknown chunk type: {chunk.get('type')}")
 
-        nodes.append(node_dict)
+        chunks.append(node_dict)
 
-    return nodes
+    return chunks
 
 
-# Add embeddings to node dictionaries using unified embedding model
-def add_embeddings(data):
-    embedding_model = create_embedding_model(EMBEDDING_DIM)
+# Add embeddings to chunks using batch processing for performance
+def add_embeddings(chunks, dimensions=1536):
+    def process_batch(batch_data, modality):
+        if batch_data:
+            _indices, content = zip(*batch_data)
+            embeddings = embed(content, modality, dimensions)
+            for _index, embedding in zip(_indices, embeddings):
+                chunks[_index]["embedding"] = embedding
 
-    for chunk in data:
-        chunk["embedding"] = embedding_model.get_text_embedding(chunk[chunk["type"]])
+    text_batch = [
+        (index, chunk["text"])
+        for index, chunk in enumerate(chunks)
+        if chunk["type"] == "text"
+    ]
+    image_batch = [
+        (index, get_data_url(chunk["image"]))
+        for index, chunk in enumerate(chunks)
+        if chunk["type"] == "image"
+    ]
 
-    return data
+    process_batch(text_batch, "text")
+    process_batch(image_batch, "image")
+
+    return chunks

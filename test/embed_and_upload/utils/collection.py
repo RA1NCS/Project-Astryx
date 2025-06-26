@@ -1,6 +1,6 @@
 import weaviate.classes as wvc
 from weaviate.classes.config import ReferenceProperty, Reconfigure
-from error_handlers import handle_collection_errors, handle_reference_errors
+from utils.error_handlers import handle_collection_errors, handle_reference_errors
 
 
 # Create single collection based on schema with optional multi-tenancy and quantization
@@ -25,7 +25,7 @@ def create_collection(
         name=name,
         vectorizer_config=wvc.config.Configure.Vectorizer.none(),
         vector_index_config=wvc.config.Configure.VectorIndex.dynamic(
-            quantizer=quantization
+            # quantizer=quantization
         ),
         multi_tenancy_config=wvc.config.Configure.multi_tenancy(
             enabled=multi_tenancy, auto_tenant_creation=multi_tenancy
@@ -40,10 +40,30 @@ def delete_collection(client, name):
     client.collections.delete(name)
 
 
+@handle_collection_errors
+def get_collections(client):
+    return client.collections.list_all()
+
+
 # Retrieve collection object by name
 @handle_collection_errors
 def get_collection(client, name):
     return client.collections.get(name)
+
+
+@handle_collection_errors
+def get_collection_with_tenant(client, name, tenant_name):
+    return client.collections.get(name).with_tenant(tenant_name)
+
+
+# Map node types to their corresponding Weaviate collection names
+def get_collection_name(node_type):
+    if node_type == "text":
+        return "TextChunk"
+    elif node_type == "image":
+        return "ImageChunk"
+    else:
+        raise ValueError(f"Unknown node_type: {node_type}")
 
 
 # Update collection configuration including BM25, multi-tenancy, and vector index settings

@@ -25,16 +25,20 @@
     -   [x] Get Tenants by State
     -   [x] Get All Tenants with States
     -   [x] Offload Inactive Tenants
--   [ ] Data Ingestion (Single & Batch)
-    -   [ ] Create Object
-    -   [ ] Read Object
-    -   [ ] Update Object
-    -   [ ] Delete Object
-    -   [ ] Get Metadata
+-   [x] Data Ingestion (Single & Batch)
+    -   [x] Create Object
+    -   [x] Batch Upload Object
+    -   [x] Read Object
+    -   [x] Update Object
+    -   [x] Delete Object
+    -   [x] Get Metadata
 -   [x] Querying & Search
     -   [x] Vector Search
     -   [x] Keyword Search
     -   [x] Hybrid Search
+    -   [x] Near Object Search
+    -   [ ] Filtered Search
+    -   [ ] Image Search
 -   [ ] Data Safety
     -   [ ] Backup
     -   [ ] Restore

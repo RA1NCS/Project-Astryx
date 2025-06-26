@@ -1,7 +1,8 @@
 import base64
 import os
 from azure.storage.blob import BlobServiceClient
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class BlobStorageManager:
@@ -25,7 +26,7 @@ class BlobStorageManager:
         except Exception:
             pass
 
-    # Upload base64 image to Azure blob storage and return public URL
+    # Upload base64 image to Azure blob storage and return public URL (used internally by batch function)
     def upload_image(self, tenant, image_base64, image_id):
         if not image_base64:
             raise Exception("No image found to upload")
@@ -39,6 +40,16 @@ class BlobStorageManager:
 
         except Exception as e:
             raise Exception(f"Failed to upload image: {e}")
+
+    # Upload multiple images concurrently using threading
+    def upload_images_batch(self, upload_images: List[Dict]) -> List[str]:
+        def upload_single_image(image):
+            return self.upload_image(
+                image["tenant"], image["image_base64"], image["image_id"]
+            )
+
+        with ThreadPool(8) as pool:
+            return pool.map(upload_single_image, upload_images)
 
     def upload_processed_file(
         self,

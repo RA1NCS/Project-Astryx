@@ -1,5 +1,5 @@
 from weaviate.classes.tenants import Tenant, TenantActivityStatus
-from error_handlers import handle_collection_errors, handle_tenant_errors
+from utils.error_handlers import handle_collection_errors, handle_tenant_errors
 
 STATE_MAP = {
     "active": TenantActivityStatus.ACTIVE,

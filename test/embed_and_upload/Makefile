@@ -1,5 +1,5 @@
 make:
-	python worker.py
+	python main.py
 
 list:
 	PYTHONWARNINGS="ignore::DeprecationWarning" weaviate-cli get collection
@@ -9,7 +9,4 @@ empty:
 	PYTHONWARNINGS="ignore::DeprecationWarning" weaviate-cli delete collection --collection ImageChunk
 
 rebuild:
-	make empty ; make ; make list ; make verify
-	
-verify:
-	cd download_from_weaviate ; python run.py
+	make empty ; make ; make list
