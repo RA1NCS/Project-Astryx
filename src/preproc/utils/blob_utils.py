@@ -48,7 +48,7 @@ class BlobStorageManager:
                 image["tenant"], image["image_base64"], image["image_id"]
             )
 
-        with ThreadPool(8) as pool:
+        with ThreadPool(12) as pool:
             return pool.map(upload_single_image, upload_images)
 
     def upload_processed_file(

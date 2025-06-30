@@ -1,0 +1,157 @@
+[
+    {
+        "uuid": "bce9f3ce-0e86-5180-b4e6-646eae0d48bc",
+        "metadata": {
+            "creation_time": "2025-06-26 16:52:28.508000+00:00",
+            "last_update_time": "2025-06-26 16:52:28.508000+00:00",
+            "distance": null,
+            "certainty": null,
+            "score": 0.7914415001869202,
+            "explain_score": "\nHybrid (Result Set keyword,bm25) Document bce9f3ce-0e86-5180-b4e6-646eae0d48bc: original score 2.9795384, normalized score: 0.04144152 - \nHybrid (Result Set vector,hybridVector) Document bce9f3ce-0e86-5180-b4e6-646eae0d48bc: original score 0.3246417, normalized score: 0.75",
+            "is_consistent": null,
+            "rerank_score": null
+        },
+        "properties": {
+            "char_len": 993,
+            "total_nodes": null,
+            "char_start": 0,
+            "source_mime": "application/docx",
+            "user": "dev",
+            "is_complex": true,
+            "file_sha256": "b57b75c91ab9daeaf409607131d3d78fc506d4d5a21b67bdf5a4fe2b1478d318",
+            "text": "***PHYS 102 \u2013 Lab 4 \u2013 Motion of charged particles in E and B Fields \u2013 WORKSHEET***\n\n***By Samii Shabuse, Shreyan Gupta, Mohammad Abezetun***\n\n**(Known values:** ***e*** **= 1.602 x 10-19 C,** ***me*** **= 9.11 x 10-31 kg)**\n\nParameters for apparatus\n\n*N* = 130\n\nCalculate the speed of electrons accelerating across a 250\u00a0V potential difference (show work) **e = 1.602 x 10-19 C,** ***me*** **= 9.11 x 10-31 kg**\n\n**eV = 1/2mv^2**\n\n**v = sqrt( (2eV) /** ***me*** **) )**\n\n**v = sqrt( (2 * 1.602 x 10-19 C * 250 V) / (9.11 x 10-31 kg) )**\n\n**v  = 9.38 * 106 m/s**\n\nCalculate the required current in the Helmholtz coils to achieve ~10-3 T magnetic field (show work) **B = 1.0* 10-3 T**\n\n**B = 1.168 x 10-4 T*m/A * I / 0.15**\n\n**I = B * 0.15 / 1.168 * 10-4**\n\n**I = 1.0* 10-3 T * 0.15 / 1.168 * 10-4**\n\n**I = 1.28 A**\n\nSuppose the magnetic field is 10-3 T, and the accelerating voltage is 250V Using known values for *e* and *m* e, calculate the expected radius of the electrons\u2019 orbit (show work)",
+            "image_refs": [],
+            "page": 1,
+            "chunk_id": "txt_d318_p01_c01",
+            "file_name": "text_images_1_d318.docx",
+            "has_tables": false
+        },
+        "references": {},
+        "vector": {},
+        "collection": "TextChunk"
+    },
+    {
+        "uuid": "0b44b1cf-1d40-518f-97ec-88202924bfdf",
+        "metadata": {
+            "creation_time": "2025-06-26 16:52:28.508000+00:00",
+            "last_update_time": "2025-06-26 16:52:28.508000+00:00",
+            "distance": null,
+            "certainty": null,
+            "score": 0.4611550569534302,
+            "explain_score": "\nHybrid (Result Set vector,hybridVector) Document 0b44b1cf-1d40-518f-97ec-88202924bfdf: original score 0.26347888, normalized score: 0.46115506",
+            "is_consistent": null,
+            "rerank_score": null
+        },
+        "properties": {
+            "file_sha256": "b57b75c91ab9daeaf409607131d3d78fc506d4d5a21b67bdf5a4fe2b1478d318",
+            "total_nodes": null,
+            "char_start": 333,
+            "source_mime": "application/docx",
+            "user": "dev",
+            "is_complex": true,
+            "char_len": 997,
+            "text": "= 1.28 A**\n\nSuppose the magnetic field is 10-3 T, and the accelerating voltage is 250V Using known values for *e* and *m* e, calculate the expected radius of the electrons\u2019 orbit (show work) **v  = 9.38 * 106 m/s**\n\n**r =** ***me*** **v / eB**\n\n**r = ((9.11 x 10-31 kg) * (9.38 * 106)) / (1.602 * 10-19) * (1.0 * 10-3)**\n\n**r = 0.0534 M**\n\n**Data Analysis:**\n\nUsing the Excel workbook provided, record measurements of Helmholtz coil currents for various the electron orbit radii at accelerating voltages from 250\u00a0V to 500\u00a0V The slope of a plot of accelerating potential vs (r B)2/2 is the ratio e/m You will need to program your Excel spreadsheet to calculate magnetic field from coil current and to tabulate the plot parameters A plot (forcing the intercept to cross the origin) will result in a prediction for the e/m ratio for an electron Submit your Excel file with this worksheet Compare your prediction to the expected value and report its accuracy as a percent error Is your result accurate",
+            "image_refs": [],
+            "page": 1,
+            "file_name": "text_images_1_d318.docx",
+            "chunk_id": "txt_d318_p01_c02",
+            "has_tables": false
+        },
+        "references": {},
+        "vector": {},
+        "collection": "TextChunk"
+    },
+    {
+        "uuid": "de0b4a71-7fc1-590e-b1e8-772fda917ecf",
+        "metadata": {
+            "creation_time": "2025-06-26 16:34:10.128000+00:00",
+            "last_update_time": "2025-06-26 16:34:10.128000+00:00",
+            "distance": null,
+            "certainty": null,
+            "score": 0.4558006525039673,
+            "explain_score": "\nHybrid (Result Set vector,hybridVector) Document de0b4a71-7fc1-590e-b1e8-772fda917ecf: original score 0.26234508, normalized score: 0.45580065",
+            "is_consistent": null,
+            "rerank_score": null
+        },
+        "properties": {
+            "file_sha256": "d1a38aa5568891b01073425481309f73ca1fad3d53cf5bfa9af1c029d06de11e",
+            "char_start": 0,
+            "total_nodes": null,
+            "source_mime": "application/pdf",
+            "user": "dev",
+            "is_complex": true,
+            "char_len": 64,
+            "text": "## Notes to Consolidated Financial Statements, continued\n\nNote 4",
+            "image_refs": [],
+            "page": 130,
+            "chunk_id": "txt_e11e_p130_c872",
+            "file_name": "f7324f3868005b3aae6aafd30441c9bb6c8823e8_e11e.pdf",
+            "has_tables": false
+        },
+        "references": {},
+        "vector": {},
+        "collection": "TextChunk"
+    },
+    {
+        "uuid": "b7f2f87f-4689-59f9-b799-79cc4a345b1e",
+        "metadata": {
+            "creation_time": "2025-06-26 16:34:10.066000+00:00",
+            "last_update_time": "2025-06-26 16:34:10.066000+00:00",
+            "distance": null,
+            "certainty": null,
+            "score": 0.4558006525039673,
+            "explain_score": "\nHybrid (Result Set vector,hybridVector) Document b7f2f87f-4689-59f9-b799-79cc4a345b1e: original score 0.26234508, normalized score: 0.45580065",
+            "is_consistent": null,
+            "rerank_score": null
+        },
+        "properties": {
+            "file_sha256": "d1a38aa5568891b01073425481309f73ca1fad3d53cf5bfa9af1c029d06de11e",
+            "total_nodes": null,
+            "char_start": 0,
+            "source_mime": "application/pdf",
+            "user": "dev",
+            "is_complex": true,
+            "char_len": 64,
+            "text": "## Notes to Consolidated Financial Statements, continued\n\nNote 4",
+            "image_refs": [],
+            "page": 118,
+            "chunk_id": "txt_e11e_p118_c773",
+            "file_name": "f7324f3868005b3aae6aafd30441c9bb6c8823e8_e11e.pdf",
+            "has_tables": false
+        },
+        "references": {},
+        "vector": {},
+        "collection": "TextChunk"
+    },
+    {
+        "uuid": "637197d8-1acd-509e-ba36-c999b5d52861",
+        "metadata": {
+            "creation_time": "2025-06-26 16:34:10.128000+00:00",
+            "last_update_time": "2025-06-26 16:34:10.128000+00:00",
+            "distance": null,
+            "certainty": null,
+            "score": 0.4558006525039673,
+            "explain_score": "\nHybrid (Result Set vector,hybridVector) Document 637197d8-1acd-509e-ba36-c999b5d52861: original score 0.26234508, normalized score: 0.45580065",
+            "is_consistent": null,
+            "rerank_score": null
+        },
+        "properties": {
+            "file_sha256": "d1a38aa5568891b01073425481309f73ca1fad3d53cf5bfa9af1c029d06de11e",
+            "char_start": 0,
+            "total_nodes": null,
+            "source_mime": "application/pdf",
+            "user": "dev",
+            "is_complex": true,
+            "char_len": 64,
+            "text": "## Notes to Consolidated Financial Statements, continued\n\nNote 4",
+            "image_refs": [],
+            "page": 129,
+            "file_name": "f7324f3868005b3aae6aafd30441c9bb6c8823e8_e11e.pdf",
+            "chunk_id": "txt_e11e_p129_c870",
+            "has_tables": false
+        },
+        "references": {},
+        "vector": {},
+        "collection": "TextChunk"
+    }
+]

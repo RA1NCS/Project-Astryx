@@ -37,10 +37,8 @@
     -   [x] Keyword Search
     -   [x] Hybrid Search
     -   [x] Near Object Search
-    -   [ ] Filtered Search
-    -   [ ] Image Search
--   [ ] Data Safety
-    -   [ ] Backup
-    -   [ ] Restore
-    -   [ ] Migrate data between clusters
-    -   [ ] Migrate data between collections
+    -   [x] Search Filters
+    -   [ ] ~Image Search~ -> UNSUPPORTED (NO BYOV)
+-   [x] Data Safety
+    -   [x] Backup
+    -   [x] Restore

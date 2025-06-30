@@ -18,3 +18,8 @@ lxml==5.4.0
 beautifulsoup4==4.13.4
 requests==2.32.3
 urllib3==1.26.20
+
+# Embedding and Weaviate dependencies
+weaviate-client==4.15.0
+litellm==1.72.2
+azure-ai-inference==1.0.0b9

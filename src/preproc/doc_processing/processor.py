@@ -259,9 +259,6 @@ def analyze_and_triage_pages(
             complex_pages.append(page_num)
         else:
             simple_pages.append(page_num)
-
-    if complex_pages:
-        print(f"Found {len(complex_pages)} complex pages requiring enhanced processing")
     else:
         print("All pages contain simple content")
     return simple_pages, complex_pages, complexity_info
@@ -369,7 +366,9 @@ def process_complex_pages(
         return {}, []
 
     try:
-        print(f"Processing {len(page_numbers)} complex pages with enhanced mode...")
+        print(
+            f"Found {len(page_numbers)} complex pages, processing with enhanced mode..."
+        )
         page_streams = extract_pages_to_memory(file_path, page_numbers)
 
         if not page_streams:
@@ -406,8 +405,6 @@ def process_complex_pages(
                 page_markdown[original_page_num] = (
                     f"# Page {original_page_num + 1}\n\n{ERROR_FALLBACK_CONTENT}\n"
                 )
-
-        print(f"Enhanced processing completed for {len(page_markdown)} pages")
         return page_markdown, all_images
 
     except Exception as e:

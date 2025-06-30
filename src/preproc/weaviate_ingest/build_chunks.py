@@ -3,9 +3,9 @@ from weaviate.classes.data import DataObject
 
 from utils.objects import generate_uuid
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from preproc.utils.blob_utils import BlobStorageManager
+from utils.blob_utils import BlobStorageManager
 
 
 # Convert chunk data into Weaviate properties with type-specific handling
@@ -62,7 +62,7 @@ def upload_images_batch(chunks):
 
 
 # Transform chunks into DataObjects grouped by collection type
-def process_chunks(chunks):
+def build_chunks(chunks):
     # Extract username from first chunk
     username = chunks[0]["metadata"]["user"]
 

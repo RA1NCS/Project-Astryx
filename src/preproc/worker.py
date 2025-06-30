@@ -8,8 +8,19 @@ import sys
 import hashlib
 from dotenv import load_dotenv
 from azure.storage.queue import QueueServiceClient, BinaryBase64DecodePolicy
-
+from llamaindex_embed.embed_nodes import add_metadata, add_embeddings
+from weaviate_ingest.build_chunks import build_chunks
 from utils.blob_utils import BlobStorageManager
+from utils.client import get_client
+from utils.collection import (
+    create_collection,
+    add_reference,
+    get_collection_with_tenant,
+    get_collection_name,
+)
+from weaviate_ingest.build_chunks import build_chunks
+from utils.objects import batch_upload_objects, generate_uuid
+from utils.schema import TEXT_SCHEMA, IMAGE_SCHEMA
 from doc_processing.processor import (
     process_document,
     _create_docling_converter,
@@ -53,28 +64,142 @@ simple_converter = None
 complex_converter = None
 
 
+# Calculate SHA256 hash of file content
 def calculate_sha256(file_data: bytes) -> str:
-    """Calculate SHA256 hash of file content."""
     return hashlib.sha256(file_data).hexdigest()
 
 
+# Extract username from blob path pattern
 def extract_username_from_path(blob_path: str) -> str:
-    """Extract username from blob path pattern: raw/{username}/filename"""
     path_parts = blob_path.split("/")
-    if len(path_parts) >= 2 and path_parts[0] == "raw":
-        return path_parts[1]
+    # Handle both "raw/dev/file.pdf" and "dev/file.pdf" patterns
+    if len(path_parts) >= 2:
+        if path_parts[0] == "raw":
+            return path_parts[1]  # raw/dev/file.pdf -> dev
+        else:
+            return path_parts[0]  # dev/file.pdf -> dev
     return "unknown"
 
 
+# Create TextChunk and ImageChunk collections with bidirectional references
+def initialize_collections(client):
+    existing_collections = set(client.collections.list_all().keys())
+
+    # Create Collections
+    create_collection(
+        client,
+        "TextChunk",
+        TEXT_SCHEMA,
+        existing_collections,
+        multi_tenancy=True,
+        quantization=None,
+    )
+    create_collection(
+        client,
+        "ImageChunk",
+        IMAGE_SCHEMA,
+        existing_collections,
+        multi_tenancy=True,
+        quantization=None,
+    )
+
+    # Add references only for newly created collections
+    if (
+        "TextChunk" not in existing_collections
+        or "ImageChunk" not in existing_collections
+    ):
+        add_reference(client, "TextChunk", "hasImages", "ImageChunk")
+        add_reference(client, "ImageChunk", "belongsToText", "TextChunk")
+
+
+# Batch upload processed chunks to their respective collections
+def batch_upload_chunks(client, chunks):
+    for collection_name, data in chunks.items():
+        # Convert DataObjects to format expected by batch upload utility
+        objects_for_batch = []
+        for obj in data["objs"]:
+            objects_for_batch.append(
+                {
+                    "uuid": obj.uuid,
+                    "properties": obj.properties,
+                    "vector": obj.vector,
+                }
+            )
+
+        # Delegate to batch upload function
+        batch_upload_objects(
+            client=client,
+            collection_name=collection_name,
+            objects=objects_for_batch,
+            tenant_name=data["tenant"],
+        )
+
+
+# Extract reference UUIDs from chunk relationships or metadata
+def get_reference_uuids(chunk):
+    if chunk["type"] == "image":
+        return [
+            generate_uuid(rel["chunk_id"])
+            for rel in chunk.get("relationships", {}).values()
+            if isinstance(rel, dict) and "chunk_id" in rel
+        ]
+    return [generate_uuid(ref) for ref in chunk["metadata"].get("image_refs", [])]
+
+
+# Establish cross-references between text and image chunks
+def add_references(client, chunks):
+    username = chunks[0]["metadata"]["user"]
+
+    for chunk in chunks:
+        ref_uuids = get_reference_uuids(chunk)
+        if not ref_uuids:
+            continue
+
+        collection = get_collection_with_tenant(
+            client, get_collection_name(chunk["type"]), username
+        )
+        ref_name = "belongsToText" if chunk["type"] == "image" else "hasImages"
+
+        for target_uuid in ref_uuids:
+            try:
+                collection.data.reference_add(
+                    from_uuid=generate_uuid(chunk["id_"]),
+                    from_property=ref_name,
+                    to=target_uuid,
+                )
+            except Exception:
+                pass
+
+
+# Process and upload chunks to Weaviate with complete cross-reference support
+def ingest(chunks):
+    if not chunks:
+        raise ValueError("No chunks provided for ingestion")
+
+    # Extract username from chunk metadata
+    username = chunks[0]["metadata"].get("user")
+
+    if not username:
+        raise ValueError("No username found in chunk metadata")
+
+    client = get_client()
+    initialize_collections(client)
+    built_chunks = build_chunks(chunks)
+    batch_upload_chunks(client, built_chunks)
+    add_references(client, chunks)
+
+    client.close()
+
+
+# Process file content using the unified nodes format
 def process_file_content(
     file_data: bytes, file_name: str, file_sha256: str = None, user: str = None
 ):
-    """Process file content using the new unified nodes format."""
     # Calculate SHA256 if not provided
     if not file_sha256:
         file_sha256 = calculate_sha256(file_data)
 
-    # Create temporary file
+    # Create temporary file``
     with tempfile.NamedTemporaryFile(
         delete=False, suffix=os.path.splitext(file_name)[1]
     ) as temp_file:
@@ -123,8 +248,8 @@ def process_file_content(
             os.unlink(temp_file_path)
 
 
+# Generate output blob path for unified nodes file
 def generate_output_blob_path(original_blob_path: str):
-    """Generate output blob path for unified nodes file."""
     # Extract path without extension
     path_without_ext = os.path.splitext(original_blob_path)[0]
     original_ext = os.path.splitext(original_blob_path)[1]
@@ -137,8 +262,31 @@ def generate_output_blob_path(original_blob_path: str):
     return nodes_blob_path
 
 
+# Process nodes with embedding and ingestion pipeline
+def process_nodes_with_embeddings_and_ingestion(data):
+    """
+    Complete processing pipeline that adds metadata, embeddings, and ingests to Weaviate
+    """
+    logger.info("Starting embedding and ingestion pipeline...")
+
+    # Step 1: Add metadata
+    logger.info("Adding metadata to nodes...")
+    nodes = add_metadata(data)
+
+    # Step 2: Add embeddings
+    logger.info("Adding embeddings to nodes...")
+    nodes = add_embeddings(nodes)
+
+    # Step 3: Ingest to Weaviate
+    logger.info("Ingesting nodes to Weaviate...")
+    ingest(nodes)
+
+    logger.info("Embedding and ingestion pipeline completed successfully")
+    return nodes
+
+
+# Process a document from queue message
 def preprocess(azqueue_message):
-    """Process a document from queue message."""
     # Initialize blob manager with connection string
     global blob_manager
     if blob_manager is None:
@@ -178,6 +326,16 @@ def preprocess(azqueue_message):
         # Process the file using new unified nodes format
         nodes_doc = process_file_content(file_data, file_name, file_sha256, user)
 
+        # Process nodes with embeddings and ingest to Weaviate
+        try:
+            process_nodes_with_embeddings_and_ingestion(nodes_doc)
+            logger.info("Successfully processed nodes with embeddings and ingestion")
+            embedding_status = "embedded"
+        except Exception as e:
+            logger.error(f"Failed to process nodes with embeddings: {e}")
+            # Continue with file upload even if embedding/ingestion fails
+            embedding_status = "embedding_failed"
+
         # Generate output blob path
         nodes_blob_path = generate_output_blob_path(blob_path)
 
@@ -191,13 +349,13 @@ def preprocess(azqueue_message):
                 "mime_type": "application/json",
                 "processor": "local_processor",
                 "content_type": "nodes",
-                "ingest_state": "done",
+                "ingest_state": embedding_status,
             },
             content_type="application/json",
         )
 
         # Update original blob tags to mark processing as complete
-        current_tags["ingest_state"] = "done"
+        current_tags["ingest_state"] = embedding_status
         current_tags["processor"] = "local_processor"
         blob_manager.update_blob_tags(container, blob_path, current_tags)
 
@@ -213,14 +371,14 @@ def preprocess(azqueue_message):
         raise e
 
 
+# Handle graceful shutdown signals
 class WorkerShutdown:
-    """Handle graceful shutdown signals"""
-
     def __init__(self):
         self.shutdown = False
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
 
+    # Handle shutdown signals and set shutdown flag
     def _signal_handler(self, signum, _frame):
         logger.info(f"Received shutdown signal {signum}")
         self.shutdown = True
@@ -248,8 +406,8 @@ class DocumentWorker:
         # Models are pre-cached in the Docker image during build
         self._initialize_cached_converters()
 
+    # Create queue if it doesn't exist
     def _ensure_queue_exists(self):
-        """Create queue if it doesn't exist"""
         try:
             self.queue_client.create_queue()
             logger.info(f"Created queue: {QUEUE_NAME}")
@@ -259,8 +417,8 @@ class DocumentWorker:
             else:
                 logger.error(f"Error creating queue: {e}")
 
+    # Initialize converters using pre-cached models from Docker build
     def _initialize_cached_converters(self):
-        """Initialize converters using pre-cached models from Docker build."""
         global simple_converter, complex_converter
 
         logger.info("Initializing converters from cached models...")
@@ -273,8 +431,8 @@ class DocumentWorker:
             logger.error("Models may not be properly cached in the image")
             raise e
 
+    # Parse queue message to extract Event Grid data
     def _parse_message(self, message):
-        """Parse queue message to extract Event Grid data"""
         try:
             # Try to parse as JSON
             if hasattr(message, "content"):
@@ -311,8 +469,8 @@ class DocumentWorker:
             logger.error(f"Error parsing message: {e}")
             return None
 
+    # Process a single queue message
     def _process_message(self, message):
-        """Process a single queue message"""
         try:
             # Parse the message
             event_data = self._parse_message(message)
@@ -334,8 +492,8 @@ class DocumentWorker:
             logger.error(f"Error processing message: {e}")
             return False
 
+    # One-shot worker that processes a single message and exits
     def run(self):
-        """One-shot worker - processes a single message and exits"""
         logger.info("Starting one-shot document processing worker...")
         logger.info(f"Looking for a single message in queue '{QUEUE_NAME}'")
 
@@ -406,8 +564,8 @@ class DocumentWorker:
         logger.info("Worker shutting down...")
 
 
+# Entry point for the worker application
 def main():
-    """Entry point"""
     try:
         worker = DocumentWorker()
         worker.run()

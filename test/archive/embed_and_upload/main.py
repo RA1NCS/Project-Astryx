@@ -1,5 +1,5 @@
 import json
-from process import process_chunks
+from process import build_chunks
 
 from utils.collection import (
     create_collection,
@@ -116,8 +116,8 @@ def ingest(chunks):
 
     client = get_client()
     initialize_collections(client)
-    processed_chunks = process_chunks(chunks)
-    batch_upload_chunks(client, processed_chunks)
+    built_chunks = build_chunks(chunks)
+    batch_upload_chunks(client, built_chunks)
     add_references(client, chunks)
 
     client.close()

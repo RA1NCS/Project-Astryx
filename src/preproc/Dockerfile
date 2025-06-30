@@ -33,7 +33,7 @@ ENV XDG_CACHE_HOME=/app/cache
 RUN mkdir -p /app/cache/docling
 
 ENV PYTHONPATH=/app
-RUN python utils/prewarm.py
+RUN python utils/prewarm_models.py
 
 # Set environment variables
 ENV PYTHONPATH=/app
