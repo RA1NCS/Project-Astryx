@@ -1,17 +1,12 @@
-import sys, os, base64, requests
-from weaviate.classes.query import MetadataQuery
-from weaviate.classes.query import QueryReference
-from weaviate.classes.query import Filter
+import sys, os
+from weaviate.classes.query import MetadataQuery, QueryReference, Filter
 
 try:
-    # Try relative imports (when run from outside utils)
     from .error_handlers import handle_query_errors
+    from .model_loaders import get_embedding
 except ImportError:
-    # Fall back to absolute imports (when run from inside utils)
     from error_handlers import handle_query_errors
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
-from preproc.utils.model_loaders import get_embedding
+    from model_loaders import get_embedding
 
 
 # Get tenant-specific collection instance for query operations

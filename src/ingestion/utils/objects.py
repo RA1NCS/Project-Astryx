@@ -5,10 +5,28 @@ try:
     # Try relative imports (when run from outside utils)
     from .collection import get_collection_with_tenant, get_collection
     from .error_handlers import handle_object_errors
+    from .query import convert_to_dict
 except ImportError:
     # Fall back to absolute imports (when run from inside utils)
     from collection import get_collection_with_tenant, get_collection
     from error_handlers import handle_object_errors
+    from query import convert_to_dict
+
+
+# Get reference property names from collection schema dynamically
+def get_reference_properties(collection):
+    try:
+        config = collection.config.get()
+        reference_props = []
+
+        # Reference properties are stored in the references attribute
+        if hasattr(config, "references") and config.references:
+            for ref in config.references:
+                reference_props.append(ref.name)
+
+        return reference_props
+    except Exception:
+        return []
 
 
 # Generate deterministic UUID from string input for consistent object identification
@@ -26,6 +44,7 @@ def get_objects(
     tenant_name,
     get_properties=False,
     get_vectors=False,
+    get_references=False,
 ):
     if tenant_name:
         tenant_collection = get_collection_with_tenant(
@@ -42,6 +61,49 @@ def get_objects(
             chunk["properties"] = chunks.properties
         if get_vectors:
             chunk["vector"] = chunks.vector
+
+        # Get references if requested
+        if get_references:
+            try:
+                # Get reference property names dynamically from collection schema
+                ref_properties = get_reference_properties(tenant_collection)
+
+                if ref_properties:
+                    # Fetch the object with references for each reference property
+                    all_references = {}
+                    for ref_prop in ref_properties:
+                        try:
+                            obj_with_refs = tenant_collection.query.fetch_object_by_id(
+                                chunks.uuid,
+                                return_references=QueryReference(link_on=ref_prop),
+                            )
+
+                            if (
+                                hasattr(obj_with_refs, "references")
+                                and obj_with_refs.references
+                            ):
+                                # Merge references from this property
+                                all_references.update(obj_with_refs.references)
+                        except Exception:
+                            continue
+
+                    if all_references:
+                        # Convert _CrossReference objects to JSON-serializable format
+                        serializable_refs = {}
+                        for ref_prop, ref_obj in all_references.items():
+                            if hasattr(ref_obj, "objects"):
+                                # Extract UUIDs from reference objects
+                                ref_uuids = [str(obj.uuid) for obj in ref_obj.objects]
+                                serializable_refs[ref_prop] = ref_uuids
+                            else:
+                                # Fallback: try to convert to string
+                                serializable_refs[ref_prop] = str(ref_obj)
+
+                        chunk["references"] = serializable_refs
+            except Exception:
+                # If reference retrieval fails, continue without references
+                pass
+
         objects.append(chunk)
 
     return objects
@@ -54,6 +116,7 @@ def get_object(
     tenant_name,
     object_uuid,
     get_vectors=False,
+    return_json=False,
 ):
     if tenant_name:
         tenant_collection = get_collection_with_tenant(
@@ -61,11 +124,25 @@ def get_object(
         )
     else:
         tenant_collection = get_collection(client, collection_name)
-    return tenant_collection.query.fetch_object_by_id(
-        object_uuid,
-        include_vector=get_vectors,
-        return_references=QueryReference(link_on="hasImages"),
-    )
+
+    # Get reference property names dynamically from collection schema
+    ref_properties = get_reference_properties(tenant_collection)
+
+    # Fetch object with all available references
+    if ref_properties:
+        # Use the first reference property or fetch separately if multiple
+        fetched_object = tenant_collection.query.fetch_object_by_id(
+            object_uuid,
+            include_vector=get_vectors,
+            return_references=QueryReference(link_on=ref_properties[0]),
+        )
+    else:
+        fetched_object = tenant_collection.query.fetch_object_by_id(
+            object_uuid,
+            include_vector=get_vectors,
+        )
+
+    return convert_to_dict([fetched_object]) if return_json else fetched_object
 
 
 def get_object_metadata(client, collection_name, tenant_name, object_uuid):
@@ -75,10 +152,20 @@ def get_object_metadata(client, collection_name, tenant_name, object_uuid):
         )
     else:
         tenant_collection = get_collection(client, collection_name)
-    return tenant_collection.query.fetch_object_by_id(
-        object_uuid,
-        return_references=QueryReference(link_on="hasImages"),
-    ).properties
+
+    # Get reference property names dynamically from collection schema
+    ref_properties = get_reference_properties(tenant_collection)
+
+    # Fetch object metadata with references if available
+    if ref_properties:
+        obj = tenant_collection.query.fetch_object_by_id(
+            object_uuid,
+            return_references=QueryReference(link_on=ref_properties[0]),
+        )
+    else:
+        obj = tenant_collection.query.fetch_object_by_id(object_uuid)
+
+    return obj.properties
 
 
 # Update specific properties of an object in a tenant-specific collection
@@ -152,3 +239,37 @@ def delete_object(client, collection_name, tenant_name, object_uuid):
     else:
         tenant_collection = get_collection(client, collection_name)
     return tenant_collection.objects.delete_by_id(object_uuid)
+
+
+# Get references for a specific object
+@handle_object_errors
+def get_object_references(client, collection_name, tenant_name, object_uuid):
+    if tenant_name:
+        tenant_collection = get_collection_with_tenant(
+            client, collection_name, tenant_name
+        )
+    else:
+        tenant_collection = get_collection(client, collection_name)
+
+    try:
+        # Get reference property names dynamically from collection schema
+        ref_properties = get_reference_properties(tenant_collection)
+
+        if not ref_properties:
+            return {}
+
+        # Fetch references for each reference property
+        all_references = {}
+        for ref_prop in ref_properties:
+            try:
+                obj = tenant_collection.query.fetch_object_by_id(
+                    object_uuid, return_references=QueryReference(link_on=ref_prop)
+                )
+                if hasattr(obj, "references") and obj.references:
+                    all_references.update(obj.references)
+            except Exception:
+                continue
+
+        return all_references
+    except Exception:
+        return {}

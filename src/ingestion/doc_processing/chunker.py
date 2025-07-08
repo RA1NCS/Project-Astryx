@@ -639,6 +639,11 @@ def extract_nodes(
                 f"img_{sha4}_p{image_page:02d}_i{chunk_image_start + i:02d}"
             )
 
+        # Create relationships for text node pointing to associated images
+        text_relationships = {}
+        for i, image_ref in enumerate(image_refs):
+            text_relationships[str(i + 1)] = {"node_id": image_ref, "node_type": "2"}
+
         text_node = {
             "id_": node_id,
             "type": "text",
@@ -657,7 +662,7 @@ def extract_nodes(
                     else {}
                 ),
             },
-            "relationships": {},
+            "relationships": text_relationships,
             "embedding": None,
         }
         nodes.append(text_node)

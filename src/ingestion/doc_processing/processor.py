@@ -259,8 +259,7 @@ def analyze_and_triage_pages(
             complex_pages.append(page_num)
         else:
             simple_pages.append(page_num)
-    else:
-        print("All pages contain simple content")
+
     return simple_pages, complex_pages, complexity_info
 
 

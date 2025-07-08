@@ -1,6 +1,10 @@
 import weaviate.classes as wvc
 from weaviate.classes.config import ReferenceProperty, Reconfigure
-from .error_handlers import handle_collection_errors, handle_reference_errors
+
+try:
+    from .error_handlers import handle_collection_errors, handle_reference_errors
+except ImportError:
+    from error_handlers import handle_collection_errors, handle_reference_errors
 
 
 # Create single collection based on schema with optional multi-tenancy and quantization

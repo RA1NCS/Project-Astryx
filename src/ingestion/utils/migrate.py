@@ -8,7 +8,14 @@ try:
     # Try relative imports (when run from outside utils)
     from .client import get_client
     from .blob_utils import BlobStorageManager
-    from .collection import get_collections, create_collection, get_collection_name
+    from .collection import (
+        get_collections,
+        create_collection,
+        get_collection_name,
+        get_collection_with_tenant,
+        get_collection,
+        add_reference,
+    )
     from .tenant import get_tenants, add_tenant, set_tenant_state, get_tenant_state
     from .objects import get_objects, batch_upload_objects, generate_uuid
     from .schema import TEXT_SCHEMA, IMAGE_SCHEMA
@@ -17,7 +24,14 @@ except ImportError:
     # Fall back to absolute imports (when run from inside utils)
     from client import get_client
     from blob_utils import BlobStorageManager
-    from collection import get_collections, create_collection, get_collection_name
+    from collection import (
+        get_collections,
+        create_collection,
+        get_collection_name,
+        get_collection_with_tenant,
+        get_collection,
+        add_reference,
+    )
     from tenant import get_tenants, add_tenant, set_tenant_state, get_tenant_state
     from objects import get_objects, batch_upload_objects, generate_uuid
     from schema import TEXT_SCHEMA, IMAGE_SCHEMA
@@ -33,6 +47,7 @@ def backup_collection(
     collection_name: str,
     tenant_name: Optional[str] = None,
     include_vectors: bool = True,
+    include_references: bool = True,
 ) -> str:
     timestamp = datetime.now().isoformat()
     backup_data = {
@@ -40,6 +55,7 @@ def backup_collection(
         "collection_name": collection_name,
         "tenant_name": tenant_name,
         "include_vectors": include_vectors,
+        "include_references": include_references,
         "metadata": {},
         "objects": [],
     }
@@ -62,6 +78,7 @@ def backup_collection(
             tenant_name,
             get_properties=True,
             get_vectors=include_vectors,
+            get_references=include_references,
         )
     else:
         # Get all tenants if multi-tenant collection
@@ -85,6 +102,7 @@ def backup_collection(
                     tenant,
                     get_properties=True,
                     get_vectors=include_vectors,
+                    get_references=include_references,
                 )
                 # Add tenant field to each object before extending the list
                 for obj in tenant_objects:
@@ -98,6 +116,7 @@ def backup_collection(
                 None,
                 get_properties=True,
                 get_vectors=include_vectors,
+                get_references=include_references,
             )
 
     backup_data["objects"] = objects
@@ -153,6 +172,7 @@ def restore_collection(
     if overwrite and collection_name in existing_collections:
         client.collections.delete(collection_name)
 
+        collection_created = False
     if collection_name not in existing_collections or overwrite:
         has_tenants = bool(backup_data["metadata"].get("tenants"))
         create_collection(
@@ -162,6 +182,40 @@ def restore_collection(
             existing_collections,
             multi_tenancy=has_tenants,
         )
+        collection_created = True
+
+    # Add reference properties if this is a TextChunk or ImageChunk collection (always check)
+    has_tenants = bool(backup_data["metadata"].get("tenants"))
+    if "textchunk" in collection_name.lower():
+        # Ensure ImageChunk collection exists for reference
+        if "ImageChunk" not in existing_collections:
+            create_collection(
+                client,
+                "ImageChunk",
+                IMAGE_SCHEMA,
+                existing_collections,
+                multi_tenancy=has_tenants,
+            )
+        try:
+            add_reference(client, collection_name, "hasImages", "ImageChunk")
+            print(f"Added hasImages reference to {collection_name}")
+        except Exception as e:
+            print(f"Warning: Could not add hasImages reference: {e}")
+    elif "imagechunk" in collection_name.lower():
+        # Ensure TextChunk collection exists for reference
+        if "TextChunk" not in existing_collections:
+            create_collection(
+                client,
+                "TextChunk",
+                TEXT_SCHEMA,
+                existing_collections,
+                multi_tenancy=has_tenants,
+            )
+        try:
+            add_reference(client, collection_name, "belongsToText", "TextChunk")
+            print(f"Added belongsToText reference to {collection_name}")
+        except Exception as e:
+            print(f"Warning: Could not add belongsToText reference: {e}")
 
     # Restore tenants if multi-tenant
     if backup_data["metadata"].get("tenants"):
@@ -293,6 +347,19 @@ def restore_collection(
 
         results = {"uploaded": uploaded, "failed": len(failed)}
         print(f"Restoration results: {results}")
+
+    # Restore references after all objects have been restored
+    if backup_data.get("include_references", False):
+        print("Restoring references...")
+        reference_results = restore_references(client, backup_data, collection_name)
+        print(f"Reference restoration results: {reference_results}")
+
+        # Add reference results to the overall results
+        if isinstance(results, dict):
+            results["references"] = reference_results
+        else:
+            # Handle case where results might be structured differently
+            results = {"objects": results, "references": reference_results}
 
     return {
         "collection_name": collection_name,
@@ -552,3 +619,77 @@ def migrate_between_collections(
         "tenant_mapping": tenant_mapping,
         "timestamp": datetime.now().isoformat(),
     }
+
+
+# Restore references from backup data after objects have been restored
+@handle_collection_errors
+def restore_references(
+    client,
+    backup_data: Dict[str, Any],
+    collection_name: str,
+) -> Dict[str, Any]:
+    """
+    Restore references after objects have been restored.
+    References must be created after all target objects exist.
+    """
+    results = {"created": 0, "failed": 0, "errors": []}
+
+    if not backup_data.get("include_references", False):
+        return results
+
+    for obj_data in backup_data["objects"]:
+        if "references" not in obj_data or not obj_data["references"]:
+            continue
+
+        object_uuid = obj_data["uuid"]
+        tenant_name = obj_data.get("tenant")
+
+        try:
+            # Get the collection with tenant if needed
+            if tenant_name:
+                collection = get_collection_with_tenant(
+                    client, collection_name, tenant_name
+                )
+            else:
+                collection = get_collection(client, collection_name)
+
+            # Restore each reference property
+            for ref_property, ref_targets in obj_data["references"].items():
+                try:
+                    if isinstance(ref_targets, list):
+                        # Multiple references (list of UUIDs)
+                        for target_uuid in ref_targets:
+                            collection.data.reference_add(
+                                from_uuid=object_uuid,
+                                from_property=ref_property,
+                                to=target_uuid,
+                            )
+                            results["created"] += 1
+                    elif isinstance(ref_targets, str):
+                        # Single reference (UUID string)
+                        collection.data.reference_add(
+                            from_uuid=object_uuid,
+                            from_property=ref_property,
+                            to=ref_targets,
+                        )
+                        results["created"] += 1
+                    else:
+                        # Unknown format, log and skip
+                        print(
+                            f"Warning: Unknown reference format for {ref_property}: {ref_targets}"
+                        )
+                except Exception as ref_error:
+                    results["failed"] += 1
+                    error_msg = f"Failed to restore reference {ref_property} for object {object_uuid}: {ref_error}"
+                    results["errors"].append(error_msg)
+                    print(f"Warning: {error_msg}")
+
+        except Exception as obj_error:
+            results["failed"] += 1
+            error_msg = (
+                f"Failed to process references for object {object_uuid}: {obj_error}"
+            )
+            results["errors"].append(error_msg)
+            print(f"Warning: {error_msg}")
+
+    return results

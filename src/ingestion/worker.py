@@ -139,9 +139,9 @@ def batch_upload_chunks(client, chunks):
 def get_reference_uuids(chunk):
     if chunk["type"] == "image":
         return [
-            generate_uuid(rel["chunk_id"])
+            generate_uuid(rel["node_id"])
             for rel in chunk.get("relationships", {}).values()
-            if isinstance(rel, dict) and "chunk_id" in rel
+            if isinstance(rel, dict) and "node_id" in rel
         ]
     return [generate_uuid(ref) for ref in chunk["metadata"].get("image_refs", [])]
 

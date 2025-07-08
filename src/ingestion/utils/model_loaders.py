@@ -9,7 +9,7 @@ load_dotenv()
 
 
 # Unified embedding function supporting both single and batch inputs
-def get_embedding(input, modality, dimensions):
+def get_embedding(input, modality, dimensions=1536):
     if modality == "text":
         if isinstance(input, str):
             input = [input]

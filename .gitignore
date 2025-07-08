@@ -13,3 +13,6 @@ chats
 *.pyc
 output/
 .env
+mlartifacts/
+*.sqlite
+src/ingestion/utils/test.py
