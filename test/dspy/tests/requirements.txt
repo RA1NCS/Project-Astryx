@@ -1,0 +1,9 @@
+pytest>=7.0.0
+pytest-mock>=3.10.0
+dspy-ai
+weaviate-client
+python-dotenv
+litellm
+replicate
+transformers
+torch 

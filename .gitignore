@@ -16,3 +16,7 @@ output/
 mlartifacts/
 *.sqlite
 src/ingestion/utils/test.py
+.pytest_cache/
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc
