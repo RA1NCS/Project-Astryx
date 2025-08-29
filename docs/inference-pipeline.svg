@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 870 180">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#555"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#c026d3"/>
+    </marker>
+  </defs>
+
+  <ellipse cx="38" cy="42" rx="34" ry="22" fill="#a5d8ff" stroke="#4a9eed" stroke-width="1.5"/>
+  <text x="38" y="42" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Query</text>
+
+  <line x1="72" y1="42" x2="108" y2="42" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="113" y="8" width="130" height="68" rx="6" fill="#d0bfff" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="178" y="30" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">DSPy</text>
+  <text x="178" y="50" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.5" fill="#6d28d9">Classify → Rewrite → Plan</text>
+
+  <line x1="243" y1="42" x2="279" y2="42" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="284" y="20" width="105" height="44" rx="6" fill="#b2f2bb" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="336" y="42" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Weaviate</text>
+
+  <line x1="389" y1="42" x2="435" y2="42" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="412" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#888">hybrid</text>
+
+  <rect x="440" y="20" width="128" height="44" rx="6" fill="#ffd8a8" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="504" y="42" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">BGE Reranker</text>
+
+  <line x1="568" y1="42" x2="604" y2="42" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="609" y="20" width="86" height="44" rx="6" fill="#a5d8ff" stroke="#4a9eed" stroke-width="1.5"/>
+  <text x="652" y="42" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">LLM</text>
+
+  <line x1="695" y1="42" x2="731" y2="42" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <ellipse cx="778" cy="42" rx="44" ry="22" fill="#b2f2bb" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="778" y="42" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Response</text>
+
+  <rect x="607" y="118" width="100" height="38" rx="6" fill="#c3fae8" stroke="#0d9488" stroke-width="1.5"/>
+  <text x="657" y="137" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#1a1a1a">CosmosDB</text>
+
+  <line x1="656" y1="64" x2="656" y2="118" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="648" y1="118" x2="648" y2="64" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="678" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#888">chat history</text>
+
+  <rect x="138" y="120" width="82" height="36" rx="6" fill="#eebefa" stroke="#c026d3" stroke-width="1.5"/>
+  <text x="179" y="138" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#1a1a1a">MLflow</text>
+
+  <line x1="178" y1="76" x2="178" y2="120" stroke="#c026d3" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#b)"/>
+  <text x="192" y="100" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#c026d3">traces</text>
+</svg>

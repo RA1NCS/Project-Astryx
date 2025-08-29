@@ -1,22 +1,42 @@
-.cursor
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# environments
+.env
+.venv
+venv/
+env/
+
+# ide
+.vscode/
+.cursor/
+.idea/
+
+# os
+.DS_Store
+
+# project
+mlartifacts/
+*.sqlite
+chats/
+output/
+.pytest_cache/
+discord-chat/
+claude.md
+*.excalidraw
+
+
+# test artifacts
 test/datasets/*
 test/**/*.pdf
 test/**/*.docx
 test/**/out_dir/
 test/**/output/
 test/**/markdown_output/
-.venv
-chats
-.DS_Store
-.vscode
 *.zip
-*.pyc
-output/
-.env
-mlartifacts/
-*.sqlite
-src/ingestion/utils/test.py
-.pytest_cache/
-
-#Ignore cursor AI rules
-.cursor/rules/codacy.mdc

@@ -1,6 +1,7 @@
-from dspy import InputField, OutputField, Signature
-from typing import List, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List
+
+from dspy import InputField, OutputField, Signature
 
 
 class Route(str, Enum):

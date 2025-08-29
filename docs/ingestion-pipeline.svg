@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 86">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <ellipse cx="40" cy="40" rx="36" ry="22" fill="#a5d8ff" stroke="#4a9eed" stroke-width="1.5"/>
+  <text x="40" y="40" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">User</text>
+
+  <line x1="76" y1="40" x2="112" y2="40" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="117" y="18" width="110" height="44" rx="6" fill="#a5d8ff" stroke="#4a9eed" stroke-width="1.5"/>
+  <text x="172" y="40" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Upload API</text>
+
+  <line x1="227" y1="40" x2="273" y2="40" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="250" y="30" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#888">SHA256</text>
+
+  <rect x="278" y="18" width="100" height="44" rx="6" fill="#c3fae8" stroke="#0d9488" stroke-width="1.5"/>
+  <text x="328" y="40" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Blob (raw)</text>
+
+  <line x1="378" y1="40" x2="424" y2="40" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="401" y="30" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#888">Event Grid</text>
+
+  <rect x="429" y="18" width="118" height="44" rx="6" fill="#ffd8a8" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="488" y="40" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Storage Queue</text>
+
+  <line x1="547" y1="40" x2="583" y2="40" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="588" y="8" width="172" height="64" rx="6" fill="#e5dbff" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="674" y="32" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">KEDA Worker</text>
+  <text x="674" y="52" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#6d28d9">Docling → Chunk → Embed</text>
+
+  <line x1="760" y1="40" x2="796" y2="40" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="801" y="18" width="108" height="44" rx="6" fill="#b2f2bb" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="855" y="40" dy="0.35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#1a1a1a">Weaviate</text>
+</svg>
